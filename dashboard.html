@@ -71,8 +71,9 @@
           <div class="panel-note">flagged 2 cycles ago</div>
         </div>
         <div class="novel">
-          <div class="novel-head">Novel / Unclassified Pattern</div>
-          <p>HRV has declined steadily for 5 days with no corresponding shift in other vitals. This combination is not present in the trusted knowledge base — <b style="color:var(--ink)">NOT_FOUND</b>. Conservative guidance: increase hydration and sleep, monitor closely. This event will be sent to Earth as a priority item at the next sync.</p>
+          <div class="novel-head">Out-of-Baseline Pattern Detected</div>
+          <p>Resting HRV has declined for 5 days with no corresponding shift in other vitals. This device reading alone isn't enough to judge — AetherSync only shows guidance once it's checked against a verified source.</p>
+          <button class="link-btn" id="openMore" style="margin-top:10px;">More — tell us how you're feeling</button>
         </div>
       </div>
     </div>
@@ -117,6 +118,21 @@
   <div class="sync">
     <div class="live"><i></i> Local trusted knowledge base v1.3 — verified</div>
     <div>Next scheduled sync in 07h 28m · delta package: 4.2 KB queued</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="moreOverlay">
+  <div class="modal-box">
+    <h3 id="moreTitle">Resting HRV is outside your baseline</h3>
+    <p class="mtext" id="moreText">Your device shows a change AetherSync can't judge on its own. Is this normal for you right now?</p>
+    <div class="checkin-opts" id="moreOpts">
+      <div class="opt" id="moreNormal">Feels normal</div>
+      <div class="opt" id="moreAbn">Something feels off</div>
+    </div>
+    <textarea id="moreNote" placeholder="Optional — describe what you're noticing (e.g. tired, headache, short of breath)"></textarea>
+    <button class="btn" id="moreAskBtn">Check Against Trusted Source</button>
+    <div class="guideline" id="moreGuideline" style="display:none;"></div>
+    <button class="link-btn" id="moreClose" style="margin-top:14px;">Close</button>
   </div>
 </div>
 
@@ -175,6 +191,60 @@
     toast.textContent = "Check-in recorded and added to today's indexed log.";
     document.getElementById('checkinNote').value = '';
     setTimeout(function () { toast.textContent = ''; }, 3500);
+  });
+
+  /* Out-of-baseline "More" flow: ask a targeted self-report, then surface
+     trusted-source lines only — no answer is shown without a cited source. */
+  var moreOverlay = document.getElementById('moreOverlay');
+  var moreSel = null;
+
+  document.getElementById('openMore').addEventListener('click', function () {
+    moreOverlay.classList.add('show');
+  });
+  document.getElementById('moreClose').addEventListener('click', function () {
+    moreOverlay.classList.remove('show');
+    document.getElementById('moreGuideline').style.display = 'none';
+    document.getElementById('moreGuideline').innerHTML = '';
+    document.getElementById('moreNote').value = '';
+    moreSel = null;
+    document.getElementById('moreNormal').classList.remove('active-normal');
+    document.getElementById('moreAbn').classList.remove('active-abn');
+  });
+  document.getElementById('moreNormal').addEventListener('click', function () {
+    moreSel = 'normal';
+    this.classList.add('active-normal');
+    document.getElementById('moreAbn').classList.remove('active-abn');
+  });
+  document.getElementById('moreAbn').addEventListener('click', function () {
+    moreSel = 'abnormal';
+    this.classList.add('active-abn');
+    document.getElementById('moreNormal').classList.remove('active-normal');
+  });
+
+  document.getElementById('moreAskBtn').addEventListener('click', function () {
+    var box = document.getElementById('moreGuideline');
+    var note = document.getElementById('moreNote').value.trim();
+
+    if (moreSel === 'normal') {
+      box.style.display = 'block';
+      box.innerHTML = '<div class="gline">Logged as normal for you. AetherSync will fold this into your adaptive baseline instead of flagging it again.</div>';
+      addLogLine('<b>[135, 09, WATCH→NORMAL, SELF-CONFIRMED]</b>');
+      return;
+    }
+
+    var hit = note ? AS.findAnswer(note) : null;
+    box.style.display = 'block';
+    if (hit) {
+      box.innerHTML =
+        '<div class="gline">' + hit.answer + '</div>' +
+        '<div class="gsrc">' + hit.source + '</div>';
+      addLogLine('<span class="qline">[135, 09, WATCH, [' + hit.idx.join(',') + ']]</span>');
+    } else {
+      box.innerHTML =
+        '<div class="gline">This isn\'t matched to a verified entry in the onboard knowledge base, so no guidance is shown — only a confirmed source would be displayed here. It has been logged for ground review.</div>' +
+        '<div class="gsrc">NOT_FOUND · no source cited</div>';
+      addLogLine('<span class="nf">[135, 09, WATCH, NOT_FOUND]</span>');
+    }
   });
 </script>
 </body>

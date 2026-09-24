@@ -18,26 +18,38 @@
       <div class="auth-sub">These starting values seed your adaptive baseline. AetherSync will refine this range over your first two weeks using your own sensor data and daily check-ins.</div>
     </div>
 
-    <form id="baselineForm">
-      <div class="field">
-        <label for="rhr">Resting Heart Rate (bpm)</label>
-        <input type="number" id="rhr" placeholder="e.g. 68" min="30" max="160">
+    <div class="connect-opts" id="connectOpts">
+      <button class="connect-btn" id="btnBluetooth">Connect via Bluetooth</button>
+      <button class="connect-btn" id="btnUsb">Connect via USB</button>
+    </div>
+    <div class="connect-status" id="connectStatus"></div>
+
+    <div class="reading-list" id="readingList" style="display:none;"></div>
+
+    <div id="periodBlock" style="display:none;">
+      <div class="field" style="margin-top:16px; margin-bottom:0;">
+        <label>This reading was taken</label>
       </div>
-      <div class="field">
-        <label for="spo2">Typical SpO₂ (%)</label>
-        <input type="number" id="spo2" placeholder="e.g. 98" min="70" max="100">
+      <div class="period-row">
+        <div class="period-opt" id="periodAM">Morning (AM)</div>
+        <div class="period-opt" id="periodPM">Evening (PM)</div>
       </div>
-      <div class="field">
-        <label for="sleep">Typical Sleep Duration (hours)</label>
-        <input type="number" id="sleep" placeholder="e.g. 7.5" min="0" max="14" step="0.1">
-      </div>
-      <div class="field">
-        <label for="notes">Any known pre-mission conditions? (optional)</label>
-        <textarea id="notes" placeholder="e.g. mild seasonal allergies"></textarea>
-      </div>
-      <button class="btn" type="submit">Save Baseline &amp; Continue</button>
-    </form>
-    <div class="hint">This uses a pre-mission fallback range until enough personal check-in data is collected — this is the cold-start step described in the AetherSync design.</div>
+      <button class="btn" id="saveBaselineBtn" disabled>Save Baseline &amp; Continue</button>
+    </div>
+
+    <div class="hint" id="baselineHint">This becomes your pre-mission fallback range until AetherSync has enough personal check-in data to build your adaptive baseline — this is the cold-start step described in the AetherSync design.</div>
+  </div>
+</div>
+
+<!-- Simulated native-style permission prompt -->
+<div class="permission-overlay" id="permOverlay">
+  <div class="permission-box">
+    <div class="pt" id="permTitle">aethersync.app wants to connect</div>
+    <div class="ps" id="permText">Allow this site to pair with a nearby health-sensor device and read live vitals?</div>
+    <div class="permission-actions">
+      <button id="permBlock">Block</button>
+      <button class="allow" id="permAllow">Allow</button>
+    </div>
   </div>
 </div>
 
@@ -46,17 +58,84 @@
   var crewId = AS.currentCrewId();
   if (!crewId) { window.location.href = 'index.html'; }
 
-  document.getElementById('baselineForm').addEventListener('submit', function (e) {
-    e.preventDefault();
+  var pendingMethod = null;
+  var overlay = document.getElementById('permOverlay');
+  var status = document.getElementById('connectStatus');
+  var readingList = document.getElementById('readingList');
+  var reading = null;
+  var period = null;
+
+  function askPermission(method) {
+    pendingMethod = method;
+    document.getElementById('permTitle').textContent =
+      method === 'bluetooth' ? 'aethersync.app wants to pair via Bluetooth' : 'aethersync.app wants to access a USB device';
+    document.getElementById('permText').textContent =
+      'Allow this site to connect to your health-sensor device and read live vitals (heart rate, SpO₂, sleep)?';
+    overlay.classList.add('show');
+  }
+
+  document.getElementById('btnBluetooth').addEventListener('click', function () { askPermission('bluetooth'); });
+  document.getElementById('btnUsb').addEventListener('click', function () { askPermission('usb'); });
+
+  document.getElementById('permBlock').addEventListener('click', function () {
+    overlay.classList.remove('show');
+    status.style.color = 'var(--red)';
+    status.textContent = 'Connection was blocked. You can retry above.';
+  });
+
+  document.getElementById('permAllow').addEventListener('click', function () {
+    overlay.classList.remove('show');
+    document.getElementById('connectOpts').style.display = 'none';
+    status.style.color = 'var(--sage)';
+    status.textContent = 'Connected via ' + pendingMethod + ' — receiving sensor data…';
+
+    reading = AS.simulateReading();
+    var rows = [
+      { label: 'Resting Heart Rate', value: reading.restingHR + ' bpm' },
+      { label: 'SpO₂', value: reading.spo2 + '%' },
+      { label: 'Sleep Duration', value: reading.sleepHours + ' h' }
+    ];
+    readingList.style.display = 'flex';
+    rows.forEach(function (r, i) {
+      setTimeout(function () {
+        var row = document.createElement('div');
+        row.className = 'reading-row';
+        row.style.animationDelay = '0s';
+        row.innerHTML = '<span>' + r.label + '</span><span class="rv">' + r.value + '</span>';
+        readingList.appendChild(row);
+        if (i === rows.length - 1) {
+          status.textContent = 'All readings received.';
+          document.getElementById('periodBlock').style.display = 'block';
+        }
+      }, i * 500);
+    });
+  });
+
+  function selectPeriod(p) {
+    period = p;
+    document.getElementById('periodAM').classList.toggle('active', p === 'AM');
+    document.getElementById('periodPM').classList.toggle('active', p === 'PM');
+    document.getElementById('saveBaselineBtn').disabled = false;
+  }
+  document.getElementById('periodAM').addEventListener('click', function () { selectPeriod('AM'); });
+  document.getElementById('periodPM').addEventListener('click', function () { selectPeriod('PM'); });
+
+  document.getElementById('saveBaselineBtn').addEventListener('click', function () {
+    if (!reading || !period) return;
     var data = {
-      restingHR: document.getElementById('rhr').value || '68',
-      spo2: document.getElementById('spo2').value || '98',
-      sleepHours: document.getElementById('sleep').value || '7.5',
-      notes: document.getElementById('notes').value || '',
+      restingHR: reading.restingHR,
+      spo2: reading.spo2,
+      sleepHours: reading.sleepHours,
+      period: period,
+      notes: '',
       createdAt: new Date().toISOString()
     };
     AS.saveBaseline(crewId, data);
-    window.location.href = 'dashboard.html';
+    // Minimal confirmation — no index breakdown shown here, just a plain "done" state.
+    document.querySelector('.auth-card').innerHTML =
+      '<div class="auth-mark">✓</div><div class="auth-title">Baseline Set</div>' +
+      '<div class="auth-sub">Your ' + period + ' reading is recorded. AetherSync will adapt this over your first two weeks.</div>';
+    setTimeout(function () { window.location.href = 'dashboard.html'; }, 1200);
   });
 </script>
 </body>
