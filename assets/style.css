@@ -309,7 +309,7 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 .sync .live i{width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block;}
 
 /* ============================================================
-   NEW: Health Check flow styles (dashboard.html)
+   Health Check flow styles (dashboard.html)
    ============================================================ */
 .flow-step{animation:fadeIn .3s ease;}
 @keyframes fadeIn{
@@ -394,7 +394,7 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 }
 
 /* ============================================================
-   NEW: Onboarding flow styles (baseline.html)
+   Onboarding flow styles (baseline.html)
    ============================================================ */
 
 .ob-shell{
@@ -417,7 +417,6 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   box-shadow:0 24px 60px rgba(35,31,24,.06);
 }
 
-/* Progress dots */
 .ob-progress{
   display:flex; justify-content:center; gap:10px;
   margin-bottom:26px;
@@ -430,7 +429,6 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 .ob-dot.active{background:var(--navy); width:26px; border-radius:4px;}
 .ob-dot.done{background:var(--sage);}
 
-/* Step base */
 .ob-step{animation:obFade .45s ease; text-align:left;}
 @keyframes obFade{
   from{opacity:0; transform:translateY(8px);}
@@ -466,7 +464,6 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   margin-top:20px;
 }
 
-/* ---- Step 1: Connect option buttons (bigger, richer) ---- */
 .ob-shell .connect-opts{
   display:flex; flex-direction:column;
   gap:10px; margin:22px 0 0;
@@ -498,7 +495,6 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   font-size:11.5px; color:var(--ink-faint);
 }
 
-/* ---- Step 2: Pairing animation ---- */
 .ob-connecting{
   position:relative;
   width:130px; height:130px;
@@ -530,7 +526,6 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   z-index:2;
 }
 
-/* ---- Reading rows streaming in ---- */
 .ob-shell .reading-list{
   display:flex; flex-direction:column;
   gap:8px; margin:8px 0 0;
@@ -577,7 +572,6 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   margin-right:4px;
 }
 
-/* ---- Step 3: AM/PM cards (bigger, more expressive) ---- */
 .ob-shell .period-row{
   display:flex; gap:12px;
   margin:6px 0 22px;
@@ -612,7 +606,6 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 .ob-shell .period-opt.active .po-icon,
 .ob-shell .period-opt.active .po-label{color:var(--navy);}
 
-/* ---- Step 4: Success ---- */
 .ob-success-mark{
   width:72px; height:72px;
   border-radius:50%;
@@ -650,4 +643,136 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 @keyframes dotBounce{
   0%, 80%, 100%{transform:translateY(0); opacity:.4;}
   40%{transform:translateY(-4px); opacity:1;}
+}
+
+/* ============================================================
+   Onboard Index Card (dashboard, after check-in submit)
+   ============================================================ */
+
+#indexCardBox{ margin-top:16px; }
+
+.index-card{
+  border:1px solid var(--line);
+  background:
+    linear-gradient(180deg, #fbf8f0 0%, #f4eee0 100%);
+  border-radius:12px;
+  padding:16px 18px;
+  box-shadow:0 2px 0 rgba(35,31,24,.03);
+  animation: idxIn .4s ease;
+}
+@keyframes idxIn{
+  from{ opacity:0; transform:translateY(6px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+
+.index-card-head{
+  display:flex; justify-content:space-between; align-items:center;
+  padding-bottom:10px; margin-bottom:12px;
+  border-bottom:1px dashed var(--line);
+}
+.idx-label{
+  font-family:var(--serif);
+  font-size:14px;
+  font-weight:600;
+  color:var(--ink);
+  letter-spacing:.01em;
+}
+.idx-status{
+  font-size:11px;
+  font-weight:600;
+  padding:4px 10px;
+  border-radius:999px;
+  letter-spacing:.05em;
+}
+.idx-status-ok{
+  background:#eef6f0; color:var(--green);
+  border:1px solid #cfe4d5;
+}
+.idx-status-watch{
+  background:#fbf3de; color:var(--yellow);
+  border:1px solid #e3ca8f;
+}
+
+.index-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px 14px;
+  margin-bottom:14px;
+}
+@media (max-width:520px){
+  .index-grid{ grid-template-columns:1fr; }
+}
+
+.idx-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:10px;
+  font-size:12.5px;
+  padding:4px 0;
+  border-bottom:1px dotted rgba(226,217,194,.7);
+}
+.idx-row:last-child{ border-bottom:none; }
+.idx-key{
+  color:var(--ink-faint);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  font-size:10.5px;
+  flex-shrink:0;
+}
+.idx-val{
+  color:var(--ink);
+  text-align:right;
+  font-size:12.5px;
+  line-height:1.5;
+}
+.idx-mono{
+  font-family:ui-monospace, monospace;
+  font-size:11.5px;
+  color:var(--sage);
+}
+
+.index-line-wrap{
+  background:#f9f4e6;
+  border:1px dashed var(--line);
+  border-radius:9px;
+  padding:10px 12px;
+  margin-bottom:10px;
+}
+.idx-line-label{
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  color:var(--ink-faint);
+  margin-bottom:6px;
+}
+.idx-line{
+  font-family:ui-monospace, monospace;
+  font-size:12px;
+  color:var(--ink);
+  word-break:break-word;
+  line-height:1.55;
+}
+
+.index-loc{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11.5px;
+  color:var(--ink-faint);
+  padding-top:8px;
+  border-top:1px solid var(--line);
+}
+.idx-pin{
+  color:var(--sage);
+  font-size:12px;
+}
+.index-loc code{
+  font-family:ui-monospace, monospace;
+  font-size:11px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:5px;
+  padding:2px 6px;
+  color:var(--ink-dim);
 }
