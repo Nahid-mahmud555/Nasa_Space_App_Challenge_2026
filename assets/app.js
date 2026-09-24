@@ -213,7 +213,7 @@ var AS = (function () {
     return next;
   }
 
-  /* Records now start at Day 1 instead of Day 135 */
+  /* Records now start at Day 1 */
   function buildCompactIndex(crewId, sensorData, symptomLabel, match, selfStatus) {
     var counter = getLogCounter(crewId) + 1;
     var day = counter;
@@ -406,10 +406,15 @@ var AS = (function () {
              new Date(t.uploadedAt).toLocaleString() + '</li>';
     }).join('');
 
+    /* Include depression score if available */
     var gameRows = games.map(function (g) {
-      return '<li>' + new Date(g.createdAt).toLocaleString() +
-             ' — Cognitive ' + g.cognitiveScore +
-             ' · Stress ' + g.stressScore + '</li>';
+      var line = new Date(g.createdAt).toLocaleString() +
+                 ' — Cognitive ' + g.cognitiveScore +
+                 ' · Stress ' + g.stressScore;
+      if (typeof g.depressionScore === 'number') {
+        line += ' · Depression ' + g.depressionScore;
+      }
+      return '<li>' + line + '</li>';
     }).join('');
 
     var html = '';
