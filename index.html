@@ -97,7 +97,7 @@
      Steps:
        1. Crew ID + passcode → AS.login()
        2. If baseline exists  → dashboard.html
-       3. If no baseline yet  → baseline.html
+       3. If no baseline yet  → baseline.html   (Layer 2)
      ============================================================ */
 
   document.getElementById('loginForm').addEventListener('submit', function (e) {
@@ -124,9 +124,12 @@
 
       /* Small delay so the success message is visible */
       setTimeout(function () {
+        /* Returning crew → straight to dashboard */
         if (AS.hasBaseline(id)) {
           window.location.href = 'dashboard.html';
-        } else {
+        }
+        /* First-time crew → Layer 2 sensor onboarding */
+        else {
           window.location.href = 'baseline.html';
         }
       }, 450);
