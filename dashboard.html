@@ -121,12 +121,13 @@
       <div class="panel" id="mindGamesPanel" style="display:none;">
         <div class="panel-head">
           <div class="panel-title">🧠 Mind Games — 5-Day Assessment</div>
-          <div class="panel-note" id="gamesNote">read aloud · solve puzzle</div>
+          <div class="panel-note" id="gamesNote">voice · puzzle · find-the-number</div>
         </div>
         <div class="games-intro">
-          <p>This short assessment tracks cognitive function, stress, and mood. Read the sentence aloud, then solve the puzzle.</p>
+          <p>This short assessment tracks cognitive function, stress, and mood. Complete all three tasks, then submit for your cognitive and stress scores.</p>
         </div>
 
+        <!-- Game 1: Voiceover -->
         <div class="game-block">
           <div class="game-label">1. Voiceover — read this aloud clearly</div>
           <div class="voice-sentence" id="voiceSentence">"The quiet stars above the silent station remind the crew that patience and courage travel together."</div>
@@ -136,10 +137,27 @@
           </div>
         </div>
 
+        <!-- Game 2: Puzzle -->
         <div class="game-block">
           <div class="game-label">2. Puzzle — quick logic test</div>
           <div class="puzzle-q" id="puzzleQ"></div>
           <div class="puzzle-opts" id="puzzleOpts"></div>
+        </div>
+
+        <!-- Game 3: Find the Number -->
+        <div class="game-block">
+          <div class="game-label">3. Find the Number — attention &amp; visual scan</div>
+          <div class="numgame-intro">
+            Among the numbers below, <b>one specific number</b> is hidden. Find it as fast as you can.
+            Your speed and accuracy feed into your stress and focus index.
+          </div>
+          <div class="numgame-target" id="numgameTarget">Find: 47</div>
+          <div class="numgame-grid" id="numgameGrid"></div>
+          <div class="numgame-status" id="numgameStatus">
+            <span class="ng-timer">⏱ 0.0s</span>
+            <span class="ng-found">— not found yet</span>
+          </div>
+          <button class="link-btn" id="restartNumGame" style="margin-top:12px;">↻ Play again</button>
         </div>
 
         <button class="btn" id="submitGamesBtn">Submit Assessment</button>
@@ -450,8 +468,21 @@
   }
   renderRecentCheckIns();
 
-  /* ---- Mind games module ---- */
+  /* ============================================================
+     MIND GAMES
+     ============================================================ */
+
+  var numGameState = {
+    started: 0,
+    elapsed: 0,
+    finished: false,
+    target: 0,
+    timerId: null,
+    mistakes: 0
+  };
+
   function initMindGames() {
+    /* --- Puzzle --- */
     var puzzles = AS.getPuzzles();
     var puzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
     document.getElementById('puzzleQ').textContent = puzzle.q;
@@ -471,6 +502,7 @@
       optsBox.appendChild(el);
     });
 
+    /* --- Voiceover --- */
     var recordBtn    = document.getElementById('recordBtn');
     var recordStatus = document.getElementById('recordStatus');
     var recording    = false;
@@ -498,30 +530,143 @@
         recordStatus.style.color = 'var(--ink-dim)';
       }
     });
+
+    /* --- Find-the-Number --- */
+    initNumberGame();
+
+    /* Play again button */
+    var restartBtn = document.getElementById('restartNumGame');
+    if (restartBtn) {
+      restartBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        initNumberGame();
+      });
+    }
   }
 
+  /* ---- Find-the-Number mini game ---- */
+  function initNumberGame() {
+    var grid = document.getElementById('numgameGrid');
+    var targetEl = document.getElementById('numgameTarget');
+    var status = document.getElementById('numgameStatus');
+    if (!grid) return;
+
+    /* Reset state */
+    if (numGameState.timerId) clearInterval(numGameState.timerId);
+    numGameState.finished = false;
+    numGameState.mistakes = 0;
+    numGameState.started = 0;
+    numGameState.elapsed = 0;
+
+    /* Build grid of 60 numbers, one hidden target */
+    var total = 60;
+    var cells = [];
+    var target = 10 + Math.floor(Math.random() * 89);
+    numGameState.target = target;
+
+    for (var i = 0; i < total; i++) {
+      var n;
+      do { n = 10 + Math.floor(Math.random() * 89); } while (n === target);
+      cells.push(n);
+    }
+    var pos = Math.floor(Math.random() * total);
+    cells[pos] = target;
+
+    targetEl.textContent = 'Find: ' + target;
+    grid.innerHTML = '';
+
+    cells.forEach(function (n) {
+      var el = document.createElement('div');
+      el.className = 'numgame-cell';
+      el.textContent = n;
+      el.addEventListener('click', function () {
+        if (numGameState.finished) return;
+
+        if (!numGameState.started) {
+          numGameState.started = Date.now();
+          numGameState.timerId = setInterval(function () {
+            numGameState.elapsed = (Date.now() - numGameState.started) / 1000;
+            status.querySelector('.ng-timer').textContent =
+              '⏱ ' + numGameState.elapsed.toFixed(1) + 's';
+          }, 100);
+        }
+
+        if (n === target) {
+          numGameState.finished = true;
+          clearInterval(numGameState.timerId);
+          numGameState.elapsed = (Date.now() - numGameState.started) / 1000;
+
+          el.classList.add('found');
+          status.querySelector('.ng-found').textContent =
+            '✓ Found in ' + numGameState.elapsed.toFixed(2) + 's · ' +
+            numGameState.mistakes + ' miss' + (numGameState.mistakes === 1 ? '' : 'es');
+          status.querySelector('.ng-found').style.color = 'var(--green)';
+
+          var speedScore = Math.max(20, 100 - numGameState.elapsed * 8);
+          var accuracyPenalty = numGameState.mistakes * 6;
+          var finalScore = Math.max(15, Math.round(speedScore - accuracyPenalty));
+          AS.saveGameScore(crewId, 'numberScan', finalScore);
+
+        } else {
+          numGameState.mistakes++;
+          el.classList.add('miss');
+          setTimeout(function () { el.classList.remove('miss'); }, 400);
+        }
+      });
+      grid.appendChild(el);
+    });
+
+    status.querySelector('.ng-timer').textContent = '⏱ 0.0s';
+    status.querySelector('.ng-found').textContent = '— not found yet';
+    status.querySelector('.ng-found').style.color = '';
+  }
+
+  /* ---- Submit games ---- */
   document.getElementById('submitGamesBtn').addEventListener('click', function () {
     var sel = document.querySelector('#puzzleOpts .puzzle-opt.selected');
     var result = document.getElementById('gamesResult');
     var puzzleCorrect = sel && sel.getAttribute('data-correct') === 'yes';
-    var voice = AS.getGameScore(crewId, 'voiceClarity') || 0;
+    var voice       = AS.getGameScore(crewId, 'voiceClarity') || 0;
+    var numberScan  = AS.getGameScore(crewId, 'numberScan') || 0;
     var puzzleScore = puzzleCorrect ? 100 : 30;
-    var cognitive = Math.round((voice + puzzleScore) / 2);
-    var stress = Math.max(10, 100 - cognitive + Math.floor(Math.random() * 15 - 7));
+
+    /* Cognitive = average of 3 games */
+    var cognitive = Math.round((voice + puzzleScore + numberScan) / 3);
+
+    /* Stress derived from cognitive + number-scan speed */
+    var rawStress = 100 - cognitive;
+    var stress = Math.max(10, Math.min(95,
+      rawStress + Math.floor(Math.random() * 12 - 6)));
+
+    /* Depression indicator: low cognitive + high stress + slow scan */
+    var depression = Math.max(5, Math.min(95,
+      Math.round((stress * 0.6) + (100 - numberScan) * 0.4)));
 
     AS.saveGameResult(crewId, {
       voiceClarity: voice,
       puzzleCorrect: puzzleCorrect,
+      numberScan: numberScan,
       cognitiveScore: cognitive,
       stressScore: stress,
+      depressionScore: depression,
       createdAt: new Date().toISOString()
     });
 
-    var mood = cognitive >= 80 ? 'stable' : cognitive >= 60 ? 'mild variation' : 'notable variation';
+    var mood =
+      cognitive >= 80 ? 'stable' :
+      cognitive >= 60 ? 'mild variation' :
+      'notable variation';
+
+    var depressionLabel =
+      depression <= 30 ? 'low' :
+      depression <= 60 ? 'moderate' :
+      'elevated';
+
     result.innerHTML =
       '<div class="games-result-card">' +
         '<div class="gr-row"><span>Cognitive Score</span><b>' + cognitive + ' / 100</b></div>' +
         '<div class="gr-row"><span>Stress Index</span><b>' + stress + ' / 100</b></div>' +
+        '<div class="gr-row"><span>Depression Indicator</span><b>' + depression + ' / 100 · ' + depressionLabel + '</b></div>' +
         '<div class="gr-row"><span>Mood</span><b>' + mood + '</b></div>' +
         '<div class="gr-note">Result saved. Re-assessment scheduled in 5 days.</div>' +
       '</div>';
@@ -540,9 +685,13 @@
   var moreOverlay = document.getElementById('moreOverlay');
   var moreSel = null;
 
-  document.getElementById('openMore')?.addEventListener('click', function () {
-    moreOverlay.classList.add('show');
-  });
+  var openMoreBtn = document.getElementById('openMore');
+  if (openMoreBtn) {
+    openMoreBtn.addEventListener('click', function () {
+      moreOverlay.classList.add('show');
+    });
+  }
+
   document.getElementById('moreClose').addEventListener('click', function () {
     moreOverlay.classList.remove('show');
     var g = document.getElementById('moreGuideline');
