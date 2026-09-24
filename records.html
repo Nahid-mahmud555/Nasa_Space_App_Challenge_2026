@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AetherSync — Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top">
+    <a class="brand" href="dashboard.html">
+      <div class="brand-mark">AS</div>
+      <div class="brand-name">AetherSync</div>
+    </a>
+    <div class="nav-links">
+      <span class="nav-crew" id="navCrew"></span>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="records.html" class="current">Records</a>
+      <a href="chatbot.html">Assistant</a>
+      <a href="#" id="logoutLink">Log out</a>
+    </div>
+  </nav>
+
+  <div class="records-hero">
+    <div class="rh-title">🔒 Locked Onboard Records</div>
+    <div class="rh-sub">
+      Day-wise indexed log. Each entry is immutable — any edit attempt reverts to the original.
+      Synced to Earth on scheduled windows.
+    </div>
+    <div class="rh-stats" id="rhStats"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Indexed Days</div>
+      <div class="panel-note" id="recordsNote">all entries locked</div>
+    </div>
+    <div id="recordsList" class="records-list"></div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  /* ============================================================
+     LAYER 4 — Locked records page
+     ============================================================ */
+
+  var crewId = AS.currentCrewId();
+  if (!crewId) { window.location.href = 'index.html'; }
+  document.getElementById('navCrew').textContent = crewId;
+
+  document.getElementById('logoutLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    AS.logout();
+  });
+
+  /* ---- Attempt any edit → revert immediately ---- */
+  function lockRecord(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    alert('🔒 This record is locked. Entries cannot be edited once stored.');
+    return false;
+  }
+  window.lockRecord = lockRecord;
+
+  function renderRecords() {
+    var records = AS.getRecords(crewId);
+    var list = document.getElementById('recordsList');
+    var stats = document.getElementById('rhStats');
+
+    if (!records || records.length === 0) {
+      list.innerHTML = '<div class="ref" style="color:var(--ink-faint); font-size:13px; padding:12px 0;">' +
+                       'No records yet. Complete a health check-in on the dashboard to start your onboard log.' +
+                       '</div>';
+      stats.innerHTML = '<span class="rh-pill">Total: 0 days</span>';
+      return;
+    }
+
+    stats.innerHTML =
+      '<span class="rh-pill">Total: ' + records.length + ' days</span>' +
+      '<span class="rh-pill">First: Day ' + records[records.length - 1].day + '</span>' +
+      '<span class="rh-pill">Latest: Day ' + records[0].day + '</span>' +
+      '<span class="rh-pill">🔒 Locked</span>';
+
+    var html = '';
+    records.forEach(function (r) {
+      var idxText = (r.idx && r.idx.length)
+        ? '[' + r.idx.join(',') + ']'
+        : '[—]';
+      var statusCls = r.status === 'NORMAL' ? 'rec-ok' : 'rec-watch';
+
+      html +=
+        '<div class="record-card">' +
+          '<div class="rec-head">' +
+            '<div class="rec-day">Day ' + r.day + '</div>' +
+            '<div class="rec-meta">' + r.period + ' · ' +
+              new Date(r.createdAt).toLocaleString() + '</div>' +
+            '<span class="rec-status ' + statusCls + '">' + r.status + '</span>' +
+          '</div>' +
+          '<div class="rec-body">' +
+            '<div class="rec-row"><span>Symptom</span><b>' + (r.symptom || '—') + '</b></div>' +
+            '<div class="rec-row"><span>Index</span><b class="rec-mono">' + idxText + '</b></div>' +
+            '<div class="rec-row"><span>Matched</span><b>' + (r.source || 'NOT_FOUND') + '</b></div>' +
+            '<div class="rec-row"><span>Source</span><b class="rec-mono">SENSOR + SELF</b></div>' +
+          '</div>' +
+          '<div class="rec-line">' + r.line + '</div>' +
+          '<div class="rec-actions">' +
+            '<button class="rec-btn" onclick="lockRecord(event)">Edit</button>' +
+            '<button class="rec-btn" onclick="lockRecord(event)">Delete</button>' +
+            '<span class="rec-lock">🔒 Locked</span>' +
+          '</div>' +
+        '</div>';
+    });
+    list.innerHTML = html;
+  }
+
+  renderRecords();
+</script>
+</body>
+</html>
