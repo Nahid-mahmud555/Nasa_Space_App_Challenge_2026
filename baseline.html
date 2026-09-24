@@ -131,7 +131,11 @@
       createdAt: new Date().toISOString()
     };
     AS.saveBaseline(crewId, data);
-    // Minimal confirmation — no index breakdown shown here, just a plain "done" state.
+
+    // NEW: baseline reading-ke today's sensor reading hishebeo save koro,
+    // jate dashboard-e giye abar sensor fetch na lage.
+    AS.saveSensorReading(crewId, reading);
+
     document.querySelector('.auth-card').innerHTML =
       '<div class="auth-mark">✓</div><div class="auth-title">Baseline Set</div>' +
       '<div class="auth-sub">Your ' + period + ' reading is recorded. AetherSync will adapt this over your first two weeks.</div>';
