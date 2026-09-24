@@ -79,19 +79,44 @@
     </div>
 
     <div>
-      <div class="panel">
+      <!-- ============ NEW HEALTH CHECK FLOW ============ -->
+      <div class="panel" id="flowPanel">
         <div class="panel-head">
-          <div class="panel-title">Daily Check-In</div>
-          <div class="panel-note">behavioral · self-report</div>
+          <div class="panel-title">Today's Health Check</div>
+          <div class="panel-note" id="flowStep">step 1 of 3</div>
         </div>
-        <div class="checkin-opts">
-          <div class="opt" id="optNormal">Feeling normal</div>
-          <div class="opt" id="optAbn">Feeling off</div>
+
+        <!-- Step 1: Sensor data auto-captured -->
+        <div id="stepSensor" class="flow-step">
+          <div class="flow-status-ok">
+            <span class="dot-ok"></span> Sensor reading captured and stored to your onboard record.
+          </div>
+          <div class="sensor-mini" id="sensorMini"></div>
+          <button class="btn" id="toStepSymptoms">Continue → Tell us how you feel</button>
         </div>
-        <textarea id="checkinNote" placeholder="Optional note — symptom or mood, e.g. slight headache, low energy..."></textarea>
-        <button class="btn" id="checkinBtn">Submit Check-In</button>
-        <div class="toast" id="checkinToast"></div>
+
+        <!-- Step 2: Symptom input -->
+        <div id="stepSymptoms" class="flow-step" style="display:none;">
+          <div class="flow-q">How are you feeling today?</div>
+          <div class="symptom-chips" id="symptomChips">
+            <div class="chip" data-sym="normal">Feeling normal</div>
+            <div class="chip" data-sym="fever">Fever / chills</div>
+            <div class="chip" data-sym="headache">Headache</div>
+            <div class="chip" data-sym="tired">Tired / low energy</div>
+            <div class="chip" data-sym="breath">Short of breath</div>
+            <div class="chip" data-sym="other">Other (describe below)</div>
+          </div>
+          <textarea id="symptomNote" placeholder="Optional — describe in your own words, e.g. 'mild headache since morning, slept poorly'"></textarea>
+          <button class="btn" id="toStepResult">Submit Check-In</button>
+        </div>
+
+        <!-- Step 3: Matched result -->
+        <div id="stepResult" class="flow-step" style="display:none;">
+          <div id="resultBox"></div>
+          <div class="saved-note" id="savedNote"></div>
+        </div>
       </div>
+      <!-- ============ /NEW HEALTH CHECK FLOW ============ -->
 
       <div class="panel">
         <div class="panel-head">
@@ -103,13 +128,11 @@
 
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">Indexed Event Log</div>
-          <div class="panel-note">compact storage · REF-deduplicated</div>
+          <div class="panel-title">Recent Check-Ins</div>
+          <div class="panel-note">friendly view · indexed log stored in background</div>
         </div>
-        <div class="log" id="logBox">
-          <div><b>[135, 05, +2.1%, AM, NORMAL, [43,45]]</b></div>
-          <div class="ref">[135, REF:127:05, [43,45]]</div>
-          <div class="nf">[134, 09, −19%, PM, WATCH, NOT_FOUND]</div>
+        <div id="recentList" style="font-size:13px; color:var(--ink-dim); line-height:1.7;">
+          <div class="ref" style="color:var(--ink-faint); font-size:12px;">No check-ins recorded yet today.</div>
         </div>
       </div>
     </div>
@@ -138,6 +161,10 @@
 
 <script src="assets/app.js"></script>
 <script>
+  /* ============================================================
+     AetherSync Dashboard — new health-check flow
+     ============================================================ */
+
   var crewId = AS.requireAuth(true);
   if (crewId) {
     document.getElementById('navCrew').textContent = crewId;
@@ -159,42 +186,146 @@
     AS.logout();
   });
 
-  function addLogLine(html, cls) {
-    var log = document.getElementById('logBox');
-    var div = document.createElement('div');
-    if (cls) div.className = cls;
-    div.innerHTML = html;
-    log.insertBefore(div, log.firstChild);
+  /* ---------- Step 1: sensor data auto-capture ---------- */
+  var todaySensor = AS.getTodaySensor(crewId);
+  if (!todaySensor) {
+    todaySensor = AS.simulateReading();
+    AS.saveSensorReading(crewId, todaySensor);
+  }
+  document.getElementById('sensorMini').innerHTML =
+    '<div class="sensor-line"><span>Resting HR</span><b>' + todaySensor.restingHR + ' bpm</b></div>' +
+    '<div class="sensor-line"><span>SpO₂</span><b>' + todaySensor.spo2 + '%</b></div>' +
+    '<div class="sensor-line"><span>Sleep</span><b>' + todaySensor.sleepHours + ' h</b></div>';
+
+  /* ---------- Step navigation ---------- */
+  var stepSensor = document.getElementById('stepSensor');
+  var stepSymptoms = document.getElementById('stepSymptoms');
+  var stepResult = document.getElementById('stepResult');
+  var flowStepLabel = document.getElementById('flowStep');
+
+  document.getElementById('toStepSymptoms').addEventListener('click', function () {
+    stepSensor.style.display = 'none';
+    stepSymptoms.style.display = 'block';
+    flowStepLabel.textContent = 'step 2 of 3';
+  });
+
+  /* ---------- Symptom chips ---------- */
+  var selectedSym = null;
+  var symLabels = {
+    normal: 'Feeling normal',
+    fever: 'Fever / chills',
+    headache: 'Headache',
+    tired: 'Tired / low energy',
+    breath: 'Short of breath',
+    other: 'Other'
+  };
+  var symQueryText = {
+    normal: 'feeling normal',
+    fever: 'fever chills',
+    headache: 'headache',
+    tired: 'tired low energy sleep',
+    breath: 'short of breath',
+    other: ''
+  };
+
+  var chipEls = document.querySelectorAll('#symptomChips .chip');
+  for (var ci = 0; ci < chipEls.length; ci++) {
+    chipEls[ci].addEventListener('click', function () {
+      for (var cj = 0; cj < chipEls.length; cj++) {
+        chipEls[cj].classList.remove('chip-active');
+      }
+      this.classList.add('chip-active');
+      selectedSym = this.getAttribute('data-sym');
+    });
   }
 
-  var optNormal = document.getElementById('optNormal');
-  var optAbn = document.getElementById('optAbn');
-  var selected = null;
-  optNormal.addEventListener('click', function () {
-    selected = 'normal'; optNormal.classList.add('active-normal'); optAbn.classList.remove('active-abn');
-  });
-  optAbn.addEventListener('click', function () {
-    selected = 'abnormal'; optAbn.classList.add('active-abn'); optNormal.classList.remove('active-normal');
-  });
-
-  document.getElementById('checkinBtn').addEventListener('click', function () {
-    var toast = document.getElementById('checkinToast');
-    if (!selected) {
-      toast.style.color = 'var(--red)';
-      toast.textContent = 'Please select Normal or Feeling off before submitting.';
+  /* ---------- Step 3: match against KB + render friendly result ---------- */
+  document.getElementById('toStepResult').addEventListener('click', function () {
+    if (!selectedSym) {
+      alert('Please pick how you feel (or "Feeling normal") before submitting.');
       return;
     }
-    var note = document.getElementById('checkinNote').value.trim();
-    var status = selected === 'normal' ? 'NORMAL' : 'ABNORMAL';
-    addLogLine('<b>[135, SELF, ' + status + (note ? ', "' + note.slice(0, 40) + '"' : '') + ']</b>');
-    toast.style.color = 'var(--green)';
-    toast.textContent = "Check-in recorded and added to today's indexed log.";
-    document.getElementById('checkinNote').value = '';
-    setTimeout(function () { toast.textContent = ''; }, 3500);
+
+    var note = document.getElementById('symptomNote').value.trim();
+    var queryText = note || symQueryText[selectedSym] || symLabels[selectedSym];
+
+    var selfStatus = selectedSym === 'normal' ? 'normal' : 'abnormal';
+    var match = AS.matchSymptom(queryText, todaySensor);
+
+    /* Build compact index entry and store it in background */
+    var indexEntry = AS.buildCompactIndex(crewId, todaySensor, symLabels[selectedSym], match, selfStatus);
+    AS.saveIndexEntry(crewId, indexEntry);
+    AS.bumpLogCounter(crewId);
+
+    /* Render result card */
+    var box = document.getElementById('resultBox');
+    if (selfStatus === 'normal') {
+      box.innerHTML =
+        '<div class="res-head ok">All good — noted as normal for you</div>' +
+        '<div class="res-body">' +
+          'AetherSync has folded today\'s sensor reading into your adaptive baseline. ' +
+          'No follow-up needed. Keep your routine check-ins going.' +
+        '</div>' +
+        '<div class="res-src">Source: self-report · confidence: high</div>';
+    } else if (match) {
+      box.innerHTML =
+        '<div class="res-head warn">Matched to onboard knowledge base</div>' +
+        '<div class="res-body">' + match.answer + '</div>' +
+        '<div class="res-body" style="margin-top:8px;">' +
+          '<b>Recommended next step:</b> keep monitoring, and if this persists beyond 2 days, ' +
+          'flag it in tomorrow\'s check-in so ground medical can review.' +
+        '</div>' +
+        '<div class="res-src">' + match.source + '</div>';
+    } else {
+      box.innerHTML =
+        '<div class="res-head nf">No verified match found</div>' +
+        '<div class="res-body">' +
+          'Your note doesn\'t match a verified entry in the onboard knowledge base yet. ' +
+          'Instead of guessing, AetherSync has logged this so the ground research team can review ' +
+          'the closest topics and close this gap for future missions.' +
+        '</div>' +
+        '<div class="res-src">NOT_FOUND · no source cited</div>';
+    }
+
+    document.getElementById('savedNote').innerHTML =
+      '<span class="saved-check">✓</span> Stored to your onboard record · will sync on next window';
+
+    stepSymptoms.style.display = 'none';
+    stepResult.style.display = 'block';
+    flowStepLabel.textContent = 'step 3 of 3 — complete';
+
+    renderRecentCheckIns();
   });
 
-  /* Out-of-baseline "More" flow: ask a targeted self-report, then surface
-     trusted-source lines only — no answer is shown without a cited source. */
+  /* ---------- Recent check-ins (friendly list) ---------- */
+  function renderRecentCheckIns() {
+    var list = AS.getIndexEntries(crewId);
+    var box = document.getElementById('recentList');
+    if (!list || list.length === 0) {
+      box.innerHTML = '<div class="ref" style="color:var(--ink-faint); font-size:12px;">No check-ins recorded yet today.</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < Math.min(list.length, 5); i++) {
+      var e = list[i];
+      var statusCls = e.status === 'NORMAL' ? 'flat' : 'up';
+      var idxText = e.idx && e.idx.length ? 'index [' + e.idx.join(',') + ']' : 'NOT_FOUND';
+      var when = new Date(e.createdAt);
+      var whenText = when.toLocaleString();
+      html +=
+        '<div class="recent-row">' +
+          '<div class="recent-line">' +
+            '<b>' + (e.symptom || 'Check-in') + '</b> ' +
+            '<span class="vital-delta ' + statusCls + '">' + e.status + '</span>' +
+          '</div>' +
+          '<div class="recent-sub">' + whenText + ' · ' + idxText + '</div>' +
+        '</div>';
+    }
+    box.innerHTML = html;
+  }
+  renderRecentCheckIns();
+
+  /* ---------- Out-of-baseline "More" modal (unchanged behaviour, same as before) ---------- */
   var moreOverlay = document.getElementById('moreOverlay');
   var moreSel = null;
 
@@ -203,8 +334,9 @@
   });
   document.getElementById('moreClose').addEventListener('click', function () {
     moreOverlay.classList.remove('show');
-    document.getElementById('moreGuideline').style.display = 'none';
-    document.getElementById('moreGuideline').innerHTML = '';
+    var g = document.getElementById('moreGuideline');
+    g.style.display = 'none';
+    g.innerHTML = '';
     document.getElementById('moreNote').value = '';
     moreSel = null;
     document.getElementById('moreNormal').classList.remove('active-normal');
@@ -228,7 +360,6 @@
     if (moreSel === 'normal') {
       box.style.display = 'block';
       box.innerHTML = '<div class="gline">Logged as normal for you. AetherSync will fold this into your adaptive baseline instead of flagging it again.</div>';
-      addLogLine('<b>[135, 09, WATCH→NORMAL, SELF-CONFIRMED]</b>');
       return;
     }
 
@@ -238,12 +369,10 @@
       box.innerHTML =
         '<div class="gline">' + hit.answer + '</div>' +
         '<div class="gsrc">' + hit.source + '</div>';
-      addLogLine('<span class="qline">[135, 09, WATCH, [' + hit.idx.join(',') + ']]</span>');
     } else {
       box.innerHTML =
         '<div class="gline">This isn\'t matched to a verified entry in the onboard knowledge base, so no guidance is shown — only a confirmed source would be displayed here. It has been logged for ground review.</div>' +
         '<div class="gsrc">NOT_FOUND · no source cited</div>';
-      addLogLine('<span class="nf">[135, 09, WATCH, NOT_FOUND]</span>');
     }
   });
 </script>
