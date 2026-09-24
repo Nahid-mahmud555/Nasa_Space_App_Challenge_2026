@@ -1,5 +1,5 @@
 /* ============================================================
-   AetherSync — shared app logic (5-layer version)
+   AetherSync — shared app logic (5-layer version, FULL)
    ------------------------------------------------------------
    NOTE: This is a front-end-only demo. Login is simulated with
    localStorage (any non-empty Crew ID + passcode is accepted)
@@ -31,11 +31,14 @@ var AS = (function () {
   /* ============================================================
      LAYER 1 — Auth
      ============================================================ */
-  function currentCrewId() { return get('aethersync_crew_id'); }
+  function currentCrewId() {
+    return get('aethersync_crew_id');
+  }
 
   function login(crewId, passcode) {
-    if (!crewId || !crewId.trim() || !passcode || !passcode.trim()) return false;
-    set('aethersync_crew_id', crewId.trim());
+    if (!crewId || !String(crewId).trim()) return false;
+    if (!passcode || !String(passcode).trim()) return false;
+    set('aethersync_crew_id', String(crewId).trim());
     return true;
   }
 
@@ -72,6 +75,7 @@ var AS = (function () {
     return 'aethersync_sensor_' + crewId + '_' + new Date().toISOString().slice(0, 10);
   }
   function saveSensorReading(crewId, reading) {
+    if (!reading) return;
     setJSON(todayKey(crewId), {
       restingHR: reading.restingHR,
       spo2: reading.spo2,
@@ -92,7 +96,6 @@ var AS = (function () {
 
   /* ============================================================
      LAYER 3 — Offline trusted knowledge base
-     (each entry now also carries a recommendation + optional test)
      ============================================================ */
   var KB = [
     {
@@ -168,7 +171,7 @@ var AS = (function () {
 
   function findAnswer(text) {
     if (!text) return null;
-    var q = text.toLowerCase();
+    var q = String(text).toLowerCase();
     for (var i = 0; i < KB.length; i++) {
       var entry = KB[i];
       for (var k = 0; k < entry.keys.length; k++) {
@@ -213,7 +216,7 @@ var AS = (function () {
     return next;
   }
 
-  /* Records now start at Day 1 */
+  /* Records start at Day 1 */
   function buildCompactIndex(crewId, sensorData, symptomLabel, match, selfStatus) {
     var counter = getLogCounter(crewId) + 1;
     var day = counter;
@@ -221,7 +224,7 @@ var AS = (function () {
     var period = now.getHours() >= 12 ? 'PM' : 'AM';
     var status = selfStatus === 'normal' ? 'NORMAL' : 'WATCH';
     var idxPart = match ? '[' + match.idx.join(',') + ']' : 'NOT_FOUND';
-    var symptomPart = symptomLabel ? '"' + symptomLabel.slice(0, 30) + '"' : '';
+    var symptomPart = symptomLabel ? '"' + String(symptomLabel).slice(0, 30) + '"' : '';
 
     var line = '[' + day + ', SENSOR+SELF, ' + status +
                (symptomPart ? ', ' + symptomPart : '') +
@@ -241,6 +244,7 @@ var AS = (function () {
   }
 
   function saveIndexEntry(crewId, entry) {
+    if (!entry) return;
     var key = 'aethersync_records_' + crewId;
     var list = getJSON(key) || [];
     list.unshift(entry);
@@ -406,7 +410,6 @@ var AS = (function () {
              new Date(t.uploadedAt).toLocaleString() + '</li>';
     }).join('');
 
-    /* Include depression score if available */
     var gameRows = games.map(function (g) {
       var line = new Date(g.createdAt).toLocaleString() +
                  ' — Cognitive ' + g.cognitiveScore +
