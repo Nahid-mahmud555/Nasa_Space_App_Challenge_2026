@@ -60,7 +60,7 @@
 
   var pendingMethod = null;
   var overlay = document.getElementById('permOverlay');
-  var status = document.getElementById('connectStatus');
+  var connectStatusEl = document.getElementById('connectStatus');
   var readingList = document.getElementById('readingList');
   var reading = null;
   var period = null;
@@ -79,15 +79,15 @@
 
   document.getElementById('permBlock').addEventListener('click', function () {
     overlay.classList.remove('show');
-    status.style.color = 'var(--red)';
-    status.textContent = 'Connection was blocked. You can retry above.';
+    connectStatusEl.style.color = 'var(--red)';
+    connectStatusEl.textContent = 'Connection was blocked. You can retry above.';
   });
 
   document.getElementById('permAllow').addEventListener('click', function () {
     overlay.classList.remove('show');
     document.getElementById('connectOpts').style.display = 'none';
-    status.style.color = 'var(--sage)';
-    status.textContent = 'Connected via ' + pendingMethod + ' — receiving sensor data…';
+    connectStatusEl.style.color = 'var(--sage)';
+    connectStatusEl.textContent = 'Connected via ' + pendingMethod + ' — receiving sensor data…';
 
     reading = AS.simulateReading();
     var rows = [
@@ -104,7 +104,7 @@
         row.innerHTML = '<span>' + r.label + '</span><span class="rv">' + r.value + '</span>';
         readingList.appendChild(row);
         if (i === rows.length - 1) {
-          status.textContent = 'All readings received.';
+          connectStatusEl.textContent = 'All readings received.';
           document.getElementById('periodBlock').style.display = 'block';
         }
       }, i * 500);
