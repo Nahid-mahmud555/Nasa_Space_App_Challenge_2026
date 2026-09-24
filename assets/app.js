@@ -7,6 +7,7 @@
 var AS = (function () {
   "use strict";
 
+  /* ---------------- storage helpers ---------------- */
   function get(key) {
     try { return localStorage.getItem(key); } catch (e) { return null; }
   }
@@ -20,6 +21,7 @@ var AS = (function () {
     try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) {}
   }
 
+  /* ---------------- auth ---------------- */
   function currentCrewId() { return get('aethersync_crew_id'); }
 
   function login(crewId, passcode) {
@@ -33,20 +35,18 @@ var AS = (function () {
     window.location.href = 'index.html';
   }
 
+  /* ---------------- baseline ---------------- */
   function hasBaseline(crewId) {
     return !!getJSON('aethersync_baseline_' + crewId);
   }
-
   function saveBaseline(crewId, data) {
     setJSON('aethersync_baseline_' + crewId, data);
   }
-
   function getBaseline(crewId) {
     return getJSON('aethersync_baseline_' + crewId);
   }
 
-  /* Guard: redirect to login if not authenticated; redirect to baseline
-     setup if authenticated but no baseline recorded yet. */
+  /* ---------------- auth guard ---------------- */
   function requireAuth(needsBaseline) {
     var id = currentCrewId();
     if (!id) { window.location.href = 'index.html'; return null; }
@@ -57,7 +57,23 @@ var AS = (function () {
     return id;
   }
 
-  /* -------- Offline trusted knowledge base (simulated onboard store) -------- */
+  /* ---------------- sensor reading storage (per crew, per day) ---------------- */
+  function todayKey(crewId) {
+    return 'aethersync_sensor_' + crewId + '_' + new Date().toISOString().slice(0, 10);
+  }
+  function saveSensorReading(crewId, reading) {
+    setJSON(todayKey(crewId), {
+      restingHR: reading.restingHR,
+      spo2: reading.spo2,
+      sleepHours: reading.sleepHours,
+      capturedAt: new Date().toISOString()
+    });
+  }
+  function getTodaySensor(crewId) {
+    return getJSON(todayKey(crewId));
+  }
+
+  /* ---------------- offline trusted knowledge base ---------------- */
   var KB = [
     { idx: [43, 47], keys: ["headache", "head ache", "migraine"],
       answer: "Headaches during long-duration missions are often linked to fluid shift, dehydration, or short sleep. Given a recent sleep deviation, this is likely related rather than an isolated event.",
@@ -68,7 +84,7 @@ var AS = (function () {
     { idx: [43], keys: ["heart rate", "palpitation", "racing heart", "hr high"],
       answer: "Elevated heart rate without other symptoms is commonly linked to activity, stress response, or early-mission cardiovascular adaptation.",
       source: "Index [43] — Cardiovascular-related guidance · confidence: moderate" },
-    { idx: [48], keys: ["can't sleep", "cannot sleep", "insomnia", "not sleeping", "sleep"],
+    { idx: [48], keys: ["can't sleep", "cannot sleep", "insomnia", "not sleeping", "sleep", "tired", "low energy"],
       answer: "Reduced sleep duration is common during high workload periods or light-cycle disruption. Consider adjusting pre-sleep routine and flag this in your next check-in if it persists beyond 3 days.",
       source: "Index [48] — Sleep & Circadian guidance · confidence: high" },
     { idx: [52], keys: ["stress", "anxious", "anxiety", "overwhelmed", "isolation", "lonely"],
@@ -82,7 +98,10 @@ var AS = (function () {
       source: "Index [49] — Musculoskeletal guidance · confidence: moderate" },
     { idx: [45, 43], keys: ["radiation", "radiation exposure", "rad dose"],
       answer: "Current radiation dose is within the expected range for this mission phase. No associated health action is indicated at this time.",
-      source: "Index [43, 45] — Radiation & Cardiovascular cross-reference · confidence: high" }
+      source: "Index [43, 45] — Radiation & Cardiovascular cross-reference · confidence: high" },
+    { idx: [47], keys: ["fever", "chills", "temperature", "hot", "cold"],
+      answer: "Fever or chills in a closed habitat can indicate an immune response or environmental factor. Hydrate, rest, and re-check temperature in 4 hours. If it persists, this will be escalated to ground medical review.",
+      source: "Index [47] — Immune & Environmental guidance · confidence: moderate" }
   ];
 
   function findAnswer(text) {
@@ -96,9 +115,75 @@ var AS = (function () {
     return null;
   }
 
-  /* Simulated sensor reading generator — stands in for a real Bluetooth/USB
-     wearable feed. Values are drawn in a normal-ish range so the demo reads
-     naturally; swap this for the real Web Bluetooth/USB API response later. */
+  /* ---------------- symptom matching (same KB, richer return) ---------------- */
+  function matchSymptom(symptomText) {
+    var q = (symptomText || '').toLowerCase().trim();
+    if (!q) return null;
+    for (var i = 0; i < KB.length; i++) {
+      var entry = KB[i];
+      for (var k = 0; k < entry.keys.length; k++) {
+        if (q.indexOf(entry.keys[k]) !== -1) {
+          return {
+            entry: entry,
+            idx: entry.idx,
+            source: entry.source,
+            answer: entry.answer,
+            matchedOn: entry.keys[k]
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  /* ---------------- compact index build + store ---------------- */
+  function getLogCounter(crewId) {
+    var v = get('aethersync_logcount_' + crewId);
+    return v ? parseInt(v, 10) : 0;
+  }
+  function bumpLogCounter(crewId) {
+    var next = getLogCounter(crewId) + 1;
+    set('aethersync_logcount_' + crewId, next.toString());
+    return next;
+  }
+
+  function buildCompactIndex(crewId, sensorData, symptomLabel, match, selfStatus) {
+    var day = 135 + getLogCounter(crewId);
+    var now = new Date();
+    var period = now.getHours() >= 12 ? 'PM' : 'AM';
+    var status = selfStatus === 'normal' ? 'NORMAL' : 'WATCH';
+    var idxPart = match ? '[' + match.idx.join(',') + ']' : 'NOT_FOUND';
+    var symptomPart = symptomLabel ? '"' + symptomLabel.slice(0, 30) + '"' : '';
+
+    var line = '[' + day + ', SENSOR+SELF, ' + status +
+               (symptomPart ? ', ' + symptomPart : '') +
+               ', ' + idxPart + ']';
+
+    return {
+      day: day,
+      period: period,
+      status: status,
+      symptom: symptomLabel,
+      idx: match ? match.idx : [],
+      source: match ? match.source : null,
+      line: line,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  function saveIndexEntry(crewId, entry) {
+    var listKey = 'aethersync_index_' + crewId;
+    var list = getJSON(listKey) || [];
+    list.unshift(entry);
+    if (list.length > 50) list = list.slice(0, 50);
+    setJSON(listKey, list);
+  }
+
+  function getIndexEntries(crewId) {
+    return getJSON('aethersync_index_' + crewId) || [];
+  }
+
+  /* ---------------- simulated sensor reading ---------------- */
   function simulateReading() {
     return {
       restingHR: (63 + Math.round(Math.random() * 12)).toString(),
@@ -107,9 +192,23 @@ var AS = (function () {
     };
   }
 
+  /* ---------------- public API ---------------- */
   return {
-    login: login, logout: logout, currentCrewId: currentCrewId,
-    hasBaseline: hasBaseline, saveBaseline: saveBaseline, getBaseline: getBaseline,
-    requireAuth: requireAuth, findAnswer: findAnswer, simulateReading: simulateReading
+    login: login,
+    logout: logout,
+    currentCrewId: currentCrewId,
+    hasBaseline: hasBaseline,
+    saveBaseline: saveBaseline,
+    getBaseline: getBaseline,
+    requireAuth: requireAuth,
+    findAnswer: findAnswer,
+    simulateReading: simulateReading,
+    saveSensorReading: saveSensorReading,
+    getTodaySensor: getTodaySensor,
+    matchSymptom: matchSymptom,
+    buildCompactIndex: buildCompactIndex,
+    saveIndexEntry: saveIndexEntry,
+    getIndexEntries: getIndexEntries,
+    bumpLogCounter: bumpLogCounter
   };
 })();
