@@ -79,7 +79,7 @@
     </div>
 
     <div>
-      <!-- ============ NEW HEALTH CHECK FLOW ============ -->
+      <!-- ============ HEALTH CHECK FLOW ============ -->
       <div class="panel" id="flowPanel">
         <div class="panel-head">
           <div class="panel-title">Today's Health Check</div>
@@ -110,13 +110,14 @@
           <button class="btn" id="toStepResult">Submit Check-In</button>
         </div>
 
-        <!-- Step 3: Matched result -->
+        <!-- Step 3: Matched result + index card -->
         <div id="stepResult" class="flow-step" style="display:none;">
           <div id="resultBox"></div>
           <div class="saved-note" id="savedNote"></div>
+          <div id="indexCardBox" style="display:none;"></div>
         </div>
       </div>
-      <!-- ============ /NEW HEALTH CHECK FLOW ============ -->
+      <!-- ============ /HEALTH CHECK FLOW ============ -->
 
       <div class="panel">
         <div class="panel-head">
@@ -162,23 +163,29 @@
 <script src="assets/app.js"></script>
 <script>
   /* ============================================================
-     AetherSync Dashboard — new health-check flow
+     AetherSync Dashboard — health-check flow + index card
      ============================================================ */
 
-  var crewId = AS.requireAuth(true);
-  if (crewId) {
-    document.getElementById('navCrew').textContent = crewId;
-    var bl = AS.getBaseline(crewId);
-    if (bl) {
-      document.getElementById('vHR').textContent = bl.restingHR + ' bpm';
-      document.getElementById('vSpo2').textContent = bl.spo2 + '%';
-      document.getElementById('vSleep').textContent = bl.sleepHours + ' h';
-      document.getElementById('baselineSummary').innerHTML =
-        'Resting HR: <b style="color:var(--ink)">' + bl.restingHR + ' bpm</b><br>' +
-        'SpO₂: <b style="color:var(--ink)">' + bl.spo2 + '%</b><br>' +
-        'Sleep: <b style="color:var(--ink)">' + bl.sleepHours + ' h</b><br>' +
-        (bl.notes ? 'Notes: ' + bl.notes : 'No pre-mission notes recorded.');
-    }
+  /* ---- Auth check: login must come first ---- */
+  var crewId = AS.currentCrewId();
+  if (!crewId) { window.location.href = 'index.html'; }
+
+  /* If logged in but no baseline yet, send to onboarding */
+  if (!AS.hasBaseline(crewId)) {
+    window.location.href = 'baseline.html';
+  }
+
+  document.getElementById('navCrew').textContent = crewId;
+  var bl = AS.getBaseline(crewId);
+  if (bl) {
+    document.getElementById('vHR').textContent = bl.restingHR + ' bpm';
+    document.getElementById('vSpo2').textContent = bl.spo2 + '%';
+    document.getElementById('vSleep').textContent = bl.sleepHours + ' h';
+    document.getElementById('baselineSummary').innerHTML =
+      'Resting HR: <b style="color:var(--ink)">' + bl.restingHR + ' bpm</b><br>' +
+      'SpO₂: <b style="color:var(--ink)">' + bl.spo2 + '%</b><br>' +
+      'Sleep: <b style="color:var(--ink)">' + bl.sleepHours + ' h</b><br>' +
+      (bl.notes ? 'Notes: ' + bl.notes : 'No pre-mission notes recorded.');
   }
 
   document.getElementById('logoutLink').addEventListener('click', function (e) {
@@ -239,7 +246,7 @@
     });
   }
 
-  /* ---------- Step 3: match against KB + render friendly result ---------- */
+  /* ---------- Step 3: match against KB + render result + index card ---------- */
   document.getElementById('toStepResult').addEventListener('click', function () {
     if (!selectedSym) {
       alert('Please pick how you feel (or "Feeling normal") before submitting.');
@@ -252,7 +259,7 @@
     var selfStatus = selectedSym === 'normal' ? 'normal' : 'abnormal';
     var match = AS.matchSymptom(queryText, todaySensor);
 
-    /* Build compact index entry and store it in background */
+    /* Build compact index entry and store it */
     var indexEntry = AS.buildCompactIndex(crewId, todaySensor, symLabels[selectedSym], match, selfStatus);
     AS.saveIndexEntry(crewId, indexEntry);
     AS.bumpLogCounter(crewId);
@@ -290,6 +297,9 @@
     document.getElementById('savedNote').innerHTML =
       '<span class="saved-check">✓</span> Stored to your onboard record · will sync on next window';
 
+    /* ---- Index card (visible now, nice formatting) ---- */
+    renderIndexCard(indexEntry, match, selfStatus);
+
     stepSymptoms.style.display = 'none';
     stepResult.style.display = 'block';
     flowStepLabel.textContent = 'step 3 of 3 — complete';
@@ -297,7 +307,64 @@
     renderRecentCheckIns();
   });
 
-  /* ---------- Recent check-ins (friendly list) ---------- */
+  /* ---------- Index card renderer ---------- */
+  function renderIndexCard(entry, match, selfStatus) {
+    var box = document.getElementById('indexCardBox');
+    var idxText = entry.idx && entry.idx.length
+      ? '[' + entry.idx.join(',') + ']'
+      : '[—]';
+    var srcText = match ? match.source : 'No verified source matched';
+
+    var statusClass = entry.status === 'NORMAL' ? 'idx-status-ok' : 'idx-status-watch';
+
+    box.style.display = 'block';
+    box.innerHTML =
+      '<div class="index-card">' +
+        '<div class="index-card-head">' +
+          '<span class="idx-label">Onboard Record</span>' +
+          '<span class="idx-status ' + statusClass + '">' + entry.status + '</span>' +
+        '</div>' +
+
+        '<div class="index-grid">' +
+          '<div class="idx-row">' +
+            '<span class="idx-key">Day</span>' +
+            '<span class="idx-val">' + entry.day + ' · ' + entry.period + '</span>' +
+          '</div>' +
+          '<div class="idx-row">' +
+            '<span class="idx-key">Source</span>' +
+            '<span class="idx-val">SENSOR + SELF</span>' +
+          '</div>' +
+          '<div class="idx-row">' +
+            '<span class="idx-key">Symptom</span>' +
+            '<span class="idx-val">' + (entry.symptom || '—') + '</span>' +
+          '</div>' +
+          '<div class="idx-row">' +
+            '<span class="idx-key">Index</span>' +
+            '<span class="idx-val idx-mono">' + idxText + '</span>' +
+          '</div>' +
+          '<div class="idx-row">' +
+            '<span class="idx-key">Matched</span>' +
+            '<span class="idx-val">' + srcText + '</span>' +
+          '</div>' +
+          '<div class="idx-row">' +
+            '<span class="idx-key">Stored</span>' +
+            '<span class="idx-val idx-mono">' + new Date(entry.createdAt).toLocaleString() + '</span>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="index-line-wrap">' +
+          '<div class="idx-line-label">Compact index line (synced to Earth on next window)</div>' +
+          '<div class="idx-line">' + entry.line + '</div>' +
+        '</div>' +
+
+        '<div class="index-loc">' +
+          '<span class="idx-pin">▣</span> Saved to local onboard storage · key: ' +
+          '<code>aethersync_index_' + crewId + '</code>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ---------- Recent check-ins ---------- */
   function renderRecentCheckIns() {
     var list = AS.getIndexEntries(crewId);
     var box = document.getElementById('recentList');
@@ -325,7 +392,7 @@
   }
   renderRecentCheckIns();
 
-  /* ---------- Out-of-baseline "More" modal (unchanged behaviour, same as before) ---------- */
+  /* ---------- Out-of-baseline "More" modal ---------- */
   var moreOverlay = document.getElementById('moreOverlay');
   var moreSel = null;
 
