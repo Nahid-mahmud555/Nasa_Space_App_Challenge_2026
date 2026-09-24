@@ -1,5 +1,5 @@
 /* ============================================================
-   AetherSync — shared stylesheet
+   AetherSync — shared stylesheet (FULL)
    ============================================================ */
 
 :root{
@@ -69,7 +69,7 @@ nav.top{
 .panel-note{font-size:11.5px; color:var(--ink-faint); letter-spacing:.02em;}
 
 /* ============================================================
-   Auth card layout (index.html)
+   Auth card (index.html)
    ============================================================ */
 .auth-shell{
   min-height:calc(100vh - 4px);
@@ -81,10 +81,7 @@ nav.top{
   background:var(--panel); border:1px solid var(--line);
   border-radius:16px; padding:38px 34px; text-align:center;
 }
-.auth-card-wide{
-  max-width:440px;
-  padding:40px 36px 32px;
-}
+.auth-card-wide{max-width:440px; padding:40px 36px 32px;}
 .auth-mark{
   width:52px; height:52px; border-radius:50%;
   border:1.5px solid var(--navy); margin:0 auto 16px;
@@ -142,57 +139,35 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   background:#eef1f6 !important;
   filter:none !important;
 }
-.btn-block{
-  display:flex !important;
-  width:100%;
-  box-sizing:border-box;
-}
+.btn-block{display:flex !important; width:100%; box-sizing:border-box;}
 
 .error{color:var(--red); font-size:12.5px; margin-top:10px; min-height:16px;}
 .hint{font-size:11.5px; color:var(--ink-faint); margin-top:18px; line-height:1.6;}
 
-/* Auth divider "or" */
+/* Auth divider */
 .auth-divider{
-  display:flex;
-  align-items:center;
-  gap:10px;
+  display:flex; align-items:center; gap:10px;
   margin:22px 0 18px;
-  color:var(--ink-faint);
-  font-size:11.5px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
+  color:var(--ink-faint); font-size:11.5px;
+  letter-spacing:.08em; text-transform:uppercase;
 }
 .auth-divider::before,
-.auth-divider::after{
-  content:"";
-  flex:1;
-  height:1px;
-  background:var(--line);
-}
+.auth-divider::after{content:""; flex:1; height:1px; background:var(--line);}
 .auth-divider span{padding:0 4px;}
 
 /* Auth hints */
 .auth-hints{
-  margin-top:26px;
-  text-align:left;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  padding-top:20px;
-  border-top:1px solid var(--line);
+  margin-top:26px; text-align:left;
+  display:flex; flex-direction:column; gap:12px;
+  padding-top:20px; border-top:1px solid var(--line);
 }
-.auth-hint-item{
-  display:flex;
-  gap:12px;
-  align-items:flex-start;
-}
+.auth-hint-item{display:flex; gap:12px; align-items:flex-start;}
 .auth-hint-item .ah-icon{
   width:22px; height:22px; border-radius:50%;
   border:1px solid var(--line);
   display:inline-flex; align-items:center; justify-content:center;
   font-size:11px; font-weight:600;
-  color:var(--navy);
-  background:var(--panel-2);
+  color:var(--navy); background:var(--panel-2);
   flex-shrink:0;
 }
 .auth-hint-item div{display:flex; flex-direction:column; gap:2px;}
@@ -200,15 +175,10 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 .auth-hint-item span{font-size:11.5px; color:var(--ink-dim); line-height:1.5;}
 
 .auth-footer{
-  margin-top:26px;
-  padding-top:16px;
+  margin-top:26px; padding-top:16px;
   border-top:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  font-size:11px;
-  color:var(--ink-faint);
+  display:flex; align-items:center; justify-content:center;
+  gap:8px; font-size:11px; color:var(--ink-faint);
   letter-spacing:.02em;
 }
 .auth-footer-dot{
@@ -300,7 +270,7 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 .novel p{font-size:13px; color:var(--ink-dim); margin:8px 0 0; line-height:1.6;}
 
 /* ============================================================
-   Log (chatbot + dashboard)
+   Log (chatbot + records)
    ============================================================ */
 .log{
   font-family:ui-monospace, monospace;
@@ -368,7 +338,7 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 .permission-actions button.allow{background:var(--navy); color:#faf7f0; border-color:var(--navy);}
 
 /* ============================================================
-   Modal (out-of-baseline "More" in dashboard)
+   Modal (HRV "More")
    ============================================================ */
 .modal-overlay{
   position:fixed; inset:0;
@@ -394,7 +364,7 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 }
 
 /* ============================================================
-   Sync footer (dashboard)
+   Sync footer
    ============================================================ */
 .sync{
   display:flex; justify-content:space-between; align-items:center;
@@ -406,7 +376,7 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 .sync .live i{width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block;}
 
 /* ============================================================
-   Health Check flow styles (dashboard.html)
+   Health Check flow (dashboard.html)
    ============================================================ */
 .flow-step{animation:fadeIn .3s ease;}
 @keyframes fadeIn{
@@ -477,7 +447,7 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   font-size:10px; font-weight:700;
 }
 
-/* Recent check-ins list on dashboard */
+/* Recent check-ins */
 .recent-row{padding:10px 0; border-bottom:1px solid var(--line);}
 .recent-row:last-child{border-bottom:none;}
 .recent-line{
@@ -492,7 +462,7 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 .recent-list-wrap{font-size:13px; color:var(--ink-dim); line-height:1.7;}
 
 /* ============================================================
-   Test suggestion + Upload panel (dashboard.html)
+   Test suggestion + Upload panel
    ============================================================ */
 .test-suggest{
   margin-top:14px;
@@ -503,63 +473,44 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   animation:fadeIn .35s ease;
 }
 .test-suggest .ts-head{
-  font-family:var(--serif);
-  font-size:14px;
-  font-weight:600;
-  color:var(--green);
-  margin-bottom:8px;
+  font-family:var(--serif); font-size:14px; font-weight:600;
+  color:var(--green); margin-bottom:8px;
 }
 .test-suggest .ts-body{
-  font-size:13px;
-  color:var(--ink-dim);
-  line-height:1.55;
-  margin-bottom:6px;
+  font-size:13px; color:var(--ink-dim);
+  line-height:1.55; margin-bottom:6px;
 }
 .test-suggest .ts-hint{
-  font-size:11.5px;
-  color:var(--ink-faint);
-  font-style:italic;
+  font-size:11.5px; color:var(--ink-faint); font-style:italic;
 }
 
 .upload-hint{
-  font-size:12.5px;
-  color:var(--ink-dim);
-  line-height:1.5;
-  margin-bottom:12px;
+  font-size:12.5px; color:var(--ink-dim);
+  line-height:1.5; margin-bottom:12px;
 }
 .upload-row{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  flex-wrap:wrap;
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
 }
 .upload-row input[type=file]{
-  flex:1;
-  padding:9px 11px;
+  flex:1; padding:9px 11px;
   background:var(--panel-2);
   border:1px dashed var(--line);
   border-radius:9px;
-  font-size:13px;
-  color:var(--ink);
+  font-size:13px; color:var(--ink);
   min-width:220px;
 }
 .upload-status{
-  margin-top:10px;
-  font-size:12px;
-  color:var(--ink-dim);
-  min-height:16px;
+  margin-top:10px; font-size:12px;
+  color:var(--ink-dim); min-height:16px;
 }
 
 /* ============================================================
-   Mind games (dashboard.html)
+   Mind games
    ============================================================ */
 .games-intro p{
-  font-size:13px;
-  color:var(--ink-dim);
-  line-height:1.6;
-  margin:0 0 18px;
+  font-size:13px; color:var(--ink-dim);
+  line-height:1.6; margin:0 0 18px;
 }
-
 .game-block{
   border:1px solid var(--line);
   border-radius:11px;
@@ -568,16 +519,14 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   margin-bottom:14px;
 }
 .game-label{
-  font-size:11.5px;
-  color:var(--ink-faint);
+  font-size:11.5px; color:var(--ink-faint);
   text-transform:uppercase;
   letter-spacing:.06em;
   margin-bottom:10px;
 }
 .voice-sentence{
   font-family:var(--serif);
-  font-size:15px;
-  line-height:1.6;
+  font-size:15px; line-height:1.6;
   color:var(--ink);
   background:var(--panel);
   border:1px dashed var(--line);
@@ -586,27 +535,18 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   margin-bottom:12px;
 }
 .game-controls{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
+  display:flex; align-items:center;
+  gap:12px; flex-wrap:wrap;
 }
-.record-status{
-  font-size:12px;
-  color:var(--ink-faint);
-}
+.record-status{font-size:12px; color:var(--ink-faint);}
 
 .puzzle-q{
-  font-size:14px;
-  color:var(--ink);
-  line-height:1.6;
-  margin-bottom:12px;
+  font-size:14px; color:var(--ink);
+  line-height:1.6; margin-bottom:12px;
   font-weight:500;
 }
 .puzzle-opts{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+  display:flex; flex-direction:column; gap:8px;
 }
 .puzzle-opt{
   border:1px solid var(--line);
@@ -649,27 +589,22 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 .gr-row span{color:var(--ink-dim);}
 .gr-row b{font-family:var(--serif); font-size:15px; color:var(--navy);}
 .gr-note{
-  margin-top:10px;
-  padding-top:10px;
+  margin-top:10px; padding-top:10px;
   border-top:1px solid var(--line);
-  font-size:11.5px;
-  color:var(--ink-faint);
+  font-size:11.5px; color:var(--ink-faint);
   line-height:1.5;
 }
 
 /* ============================================================
-   Find-the-Number mini game (dashboard.html)
+   Find-the-Number mini game
    ============================================================ */
 .numgame-intro{
-  font-size:13px;
-  color:var(--ink-dim);
-  line-height:1.6;
-  margin-bottom:12px;
+  font-size:13px; color:var(--ink-dim);
+  line-height:1.6; margin-bottom:12px;
 }
 .numgame-target{
   font-family:var(--serif);
-  font-size:18px;
-  font-weight:600;
+  font-size:18px; font-weight:600;
   color:var(--navy);
   margin-bottom:12px;
   padding:10px 14px;
@@ -740,7 +675,7 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 }
 
 /* ============================================================
-   Chatbot trends (chatbot.html)
+   Chatbot trends
    ============================================================ */
 .trend-list{
   display:flex;
@@ -751,10 +686,8 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   padding-right:4px;
 }
 .trend-empty{
-  font-size:12.5px;
-  color:var(--ink-faint);
-  line-height:1.6;
-  padding:8px 0;
+  font-size:12.5px; color:var(--ink-faint);
+  line-height:1.6; padding:8px 0;
 }
 .trend-row{
   display:flex;
@@ -808,7 +741,7 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 }
 
 /* ============================================================
-   Records page (records.html — Layer 4)
+   Records page (records.html)
    ============================================================ */
 .records-hero{
   background:var(--panel);
@@ -855,6 +788,10 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   background:linear-gradient(180deg,#fbf8f0 0%,#f4eee0 100%);
   padding:16px 18px;
   animation:idxIn .35s ease;
+}
+@keyframes idxIn{
+  from{opacity:0; transform:translateY(6px);}
+  to{opacity:1; transform:translateY(0);}
 }
 .rec-head{
   display:flex;
@@ -959,4 +896,341 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   margin-left:auto;
   font-size:11px;
   color:var(--ink-faint);
+}
+
+/* ============================================================
+   ONBOARDING FLOW — baseline.html (Layer 2)
+   ============================================================ */
+.ob-shell{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(76,122,103,.06), transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(28,43,69,.05), transparent 45%),
+    var(--bg);
+}
+.ob-card{
+  width:100%;
+  max-width:520px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:40px 36px 36px;
+  position:relative;
+  box-shadow:0 24px 60px rgba(35,31,24,.06);
+}
+
+/* Progress dots */
+.ob-progress{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:26px;
+}
+.ob-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--line);
+  transition:all .35s ease;
+}
+.ob-dot.active{
+  background:var(--navy);
+  width:26px;
+  border-radius:4px;
+}
+.ob-dot.done{background:var(--sage);}
+
+/* Step animation */
+.ob-step{
+  animation:obFade .45s ease;
+  text-align:left;
+}
+@keyframes obFade{
+  from{opacity:0; transform:translateY(8px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.ob-mark{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  border:1.5px solid var(--navy);
+  margin:0 auto 18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:var(--serif);
+  color:var(--navy);
+  font-size:19px;
+  text-align:center;
+}
+.ob-mark.small{
+  width:42px;
+  height:42px;
+  font-size:16px;
+  background:#eef6f0;
+  border-color:var(--green);
+  color:var(--green);
+}
+
+.ob-title{
+  font-family:var(--serif);
+  font-size:23px;
+  font-weight:600;
+  margin:0 0 8px;
+  text-align:center;
+  line-height:1.3;
+}
+.ob-sub{
+  font-size:13.5px;
+  color:var(--ink-dim);
+  line-height:1.6;
+  text-align:center;
+  margin-bottom:24px;
+}
+.ob-hint{
+  font-size:11.5px;
+  color:var(--ink-faint);
+  line-height:1.6;
+  text-align:center;
+  margin-top:20px;
+}
+
+/* Connect option buttons */
+.ob-shell .connect-opts{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin:22px 0 0;
+}
+.ob-shell .connect-btn{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+  padding:16px 18px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:var(--panel-2);
+  cursor:pointer;
+  color:var(--ink);
+  font-family:var(--sans);
+  text-align:left;
+  transition:all .18s ease;
+}
+.ob-shell .connect-btn:hover{
+  border-color:var(--navy);
+  background:#eef1f6;
+  transform:translateY(-1px);
+}
+.ob-shell .connect-btn .cb-icon{
+  font-size:18px;
+  color:var(--navy);
+  margin-bottom:4px;
+}
+.ob-shell .connect-btn .cb-label{
+  font-size:14.5px;
+  font-weight:600;
+}
+.ob-shell .connect-btn .cb-sub{
+  font-size:11.5px;
+  color:var(--ink-faint);
+}
+
+/* Pairing animation */
+.ob-connecting{
+  position:relative;
+  width:130px;
+  height:130px;
+  margin:0 auto 22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.pulse-ring{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:1.5px solid var(--sage);
+  opacity:0;
+  animation:pulseRing 2.4s ease-out infinite;
+}
+.pulse-ring.delay1{animation-delay:.8s;}
+.pulse-ring.delay2{animation-delay:1.6s;}
+@keyframes pulseRing{
+  0%{transform:scale(.35); opacity:0;}
+  30%{opacity:.55;}
+  100%{transform:scale(1); opacity:0;}
+}
+.pulse-core{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  background:var(--sage);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  box-shadow:0 0 0 6px rgba(76,122,103,.15);
+  z-index:2;
+}
+
+/* Reading rows */
+.ob-shell .reading-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin:8px 0 0;
+}
+.ob-shell .reading-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 14px;
+  background:var(--panel-2);
+  font-size:13.5px;
+  opacity:0;
+  transform:translateY(6px);
+  transition:opacity .35s ease, transform .35s ease;
+}
+.ob-shell .reading-row.in{
+  opacity:1;
+  transform:translateY(0);
+}
+.rr-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--sage);
+  flex-shrink:0;
+  box-shadow:0 0 0 4px rgba(76,122,103,.15);
+}
+.rr-label{
+  flex:1;
+  color:var(--ink-dim);
+}
+.rr-value{
+  font-family:var(--serif);
+  font-weight:600;
+  color:var(--sage);
+  font-size:15px;
+}
+
+.stream-status{
+  text-align:center;
+  font-size:12.5px;
+  color:var(--sage);
+  margin-top:16px;
+  min-height:18px;
+}
+.ss-check{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:var(--green);
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+  margin-right:4px;
+}
+
+/* AM/PM cards */
+.ob-shell .period-row{
+  display:flex;
+  gap:12px;
+  margin:6px 0 22px;
+}
+.ob-shell .period-opt{
+  flex:1;
+  text-align:center;
+  padding:20px 12px;
+  border-radius:12px;
+  border:1.5px solid var(--line);
+  background:var(--panel-2);
+  cursor:pointer;
+  transition:all .18s ease;
+}
+.ob-shell .period-opt:hover{
+  border-color:var(--navy);
+}
+.ob-shell .period-opt.active{
+  border-color:var(--navy);
+  background:#eef1f6;
+  box-shadow:0 4px 14px rgba(28,43,69,.08);
+}
+.po-icon{
+  font-size:26px;
+  color:var(--navy);
+  margin-bottom:6px;
+}
+.ob-shell .period-opt .po-label{
+  font-family:var(--serif);
+  font-size:16px;
+  font-weight:600;
+  color:var(--ink);
+}
+.ob-shell .period-opt .po-time{
+  font-size:11px;
+  color:var(--ink-faint);
+  margin-top:4px;
+  letter-spacing:.02em;
+}
+.ob-shell .period-opt.active .po-icon,
+.ob-shell .period-opt.active .po-label{
+  color:var(--navy);
+}
+
+/* Success step */
+.ob-success-mark{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  background:var(--green);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:34px;
+  margin:0 auto 20px;
+  box-shadow:0 0 0 8px rgba(63,138,99,.15);
+  animation:popIn .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{
+  0%{transform:scale(.4); opacity:0;}
+  100%{transform:scale(1); opacity:1;}
+}
+.ob-redirect{
+  text-align:center;
+  font-size:12.5px;
+  color:var(--ink-faint);
+  margin-top:22px;
+}
+.dots{
+  display:inline-flex;
+  gap:4px;
+  margin-left:6px;
+  vertical-align:middle;
+}
+.dots i{
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--ink-faint);
+  animation:dotBounce 1.2s ease-in-out infinite;
+}
+.dots i:nth-child(2){animation-delay:.15s;}
+.dots i:nth-child(3){animation-delay:.3s;}
+@keyframes dotBounce{
+  0%, 80%, 100%{transform:translateY(0); opacity:.4;}
+  40%{transform:translateY(-4px); opacity:1;}
 }
