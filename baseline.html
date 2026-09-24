@@ -3,49 +3,120 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AetherSync — Baseline Setup</title>
+<title>AetherSync — Sensor Onboarding</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-<div class="auth-shell">
-  <div class="auth-card" style="max-width:460px; text-align:left;">
-    <div style="text-align:center;">
-      <div class="auth-mark">AS</div>
-      <div class="auth-title">Set Your Personal Baseline</div>
-      <div class="auth-sub">These starting values seed your adaptive baseline. AetherSync will refine this range over your first two weeks using your own sensor data and daily check-ins.</div>
+
+<div class="ob-shell">
+  <div class="ob-card">
+
+    <!-- Progress dots -->
+    <div class="ob-progress" id="obProgress">
+      <span class="ob-dot active" data-step="1"></span>
+      <span class="ob-dot" data-step="2"></span>
+      <span class="ob-dot" data-step="3"></span>
+      <span class="ob-dot" data-step="4"></span>
     </div>
 
-    <div class="connect-opts" id="connectOpts">
-      <button class="connect-btn" id="btnBluetooth">Connect via Bluetooth</button>
-      <button class="connect-btn" id="btnUsb">Connect via USB</button>
-    </div>
-    <div class="connect-status" id="connectStatus"></div>
-
-    <div class="reading-list" id="readingList" style="display:none;"></div>
-
-    <div id="periodBlock" style="display:none;">
-      <div class="field" style="margin-top:16px; margin-bottom:0;">
-        <label>This reading was taken</label>
+    <!-- ============ STEP 1: INTRO + CONNECT OPTIONS ============ -->
+    <div class="ob-step" id="obStep1">
+      <div class="ob-mark">AS</div>
+      <div class="ob-title">Welcome aboard, <span id="crewName">crew</span>.</div>
+      <div class="ob-sub">
+        Before your first check-in, let's pair your onboard health sensor.
+        AetherSync will pull a starting reading to seed your personal baseline —
+        this is the cold-start step described in the mission design.
       </div>
+
+      <div class="connect-opts">
+        <button class="connect-btn" id="btnBluetooth">
+          <span class="cb-icon">◉</span>
+          <span class="cb-label">Connect via Bluetooth</span>
+          <span class="cb-sub">Wireless · nearby device</span>
+        </button>
+        <button class="connect-btn" id="btnUsb">
+          <span class="cb-icon">▣</span>
+          <span class="cb-label">Connect via USB</span>
+          <span class="cb-sub">Wired · direct port</span>
+        </button>
+      </div>
+
+      <div class="ob-hint">
+        Your data never leaves this device until a scheduled sync window opens.
+        Nothing is shared without your confirmation.
+      </div>
+    </div>
+
+    <!-- ============ STEP 2: SENSOR READINGS STREAMING ============ -->
+    <div class="ob-step" id="obStep2" style="display:none;">
+      <div class="ob-connecting">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring delay1"></div>
+        <div class="pulse-ring delay2"></div>
+        <div class="pulse-core">◉</div>
+      </div>
+      <div class="ob-title" id="obStep2Title">Pairing via <span id="methodLabel">Bluetooth</span>…</div>
+      <div class="ob-sub" id="obStep2Sub">
+        Establishing a secure channel with your onboard health sensor.
+        This usually takes a moment.
+      </div>
+
+      <div class="reading-list" id="readingList"></div>
+      <div class="stream-status" id="streamStatus"></div>
+    </div>
+
+    <!-- ============ STEP 3: AM/PM SELECTION ============ -->
+    <div class="ob-step" id="obStep3" style="display:none;">
+      <div class="ob-mark small">✓</div>
+      <div class="ob-title">Readings received.</div>
+      <div class="ob-sub">
+        When was this reading taken? This helps AetherSync align your
+        baseline to your daily rhythm.
+      </div>
+
       <div class="period-row">
-        <div class="period-opt" id="periodAM">Morning (AM)</div>
-        <div class="period-opt" id="periodPM">Evening (PM)</div>
+        <div class="period-opt" id="periodAM">
+          <div class="po-icon">☀</div>
+          <div class="po-label">Morning</div>
+          <div class="po-time">AM · 06:00–12:00</div>
+        </div>
+        <div class="period-opt" id="periodPM">
+          <div class="po-icon">☾</div>
+          <div class="po-label">Evening</div>
+          <div class="po-time">PM · 18:00–24:00</div>
+        </div>
       </div>
+
       <button class="btn" id="saveBaselineBtn" disabled>Save Baseline &amp; Continue</button>
     </div>
 
-    <div class="hint" id="baselineHint">This becomes your pre-mission fallback range until AetherSync has enough personal check-in data to build your adaptive baseline — this is the cold-start step described in the AetherSync design.</div>
+    <!-- ============ STEP 4: SAVED / REDIRECTING ============ -->
+    <div class="ob-step" id="obStep4" style="display:none;">
+      <div class="ob-success-mark">✓</div>
+      <div class="ob-title">Baseline recorded.</div>
+      <div class="ob-sub" id="obFinalMsg">
+        Your reading is now your personal baseline.
+        AetherSync will adapt this over your first two weeks.
+      </div>
+      <div class="ob-redirect">
+        Opening your dashboard<span class="dots"><i></i><i></i><i></i></span>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- Simulated native-style permission prompt -->
+<!-- ============ NATIVE-STYLE PERMISSION OVERLAY ============ -->
 <div class="permission-overlay" id="permOverlay">
   <div class="permission-box">
     <div class="pt" id="permTitle">aethersync.app wants to connect</div>
-    <div class="ps" id="permText">Allow this site to pair with a nearby health-sensor device and read live vitals?</div>
+    <div class="ps" id="permText">
+      Allow this site to pair with a nearby health-sensor device and read live vitals?
+    </div>
     <div class="permission-actions">
       <button id="permBlock">Block</button>
       <button class="allow" id="permAllow">Allow</button>
@@ -55,20 +126,45 @@
 
 <script src="assets/app.js"></script>
 <script>
+  /* ============================================================
+     LAYER 2 — Sensor onboarding
+     Steps:
+       1. Connect (Bluetooth / USB)
+       2. Stream readings (HR, SpO₂, Sleep)
+       3. AM / PM selection
+       4. Save baseline → redirect to dashboard
+     ============================================================ */
+
   var crewId = AS.currentCrewId();
   if (!crewId) { window.location.href = 'index.html'; }
 
-  var pendingMethod = null;
-  var overlay = document.getElementById('permOverlay');
-  var connectStatusEl = document.getElementById('connectStatus');
-  var readingList = document.getElementById('readingList');
-  var reading = null;
-  var period = null;
+  document.getElementById('crewName').textContent = crewId;
 
+  var pendingMethod = null;
+  var overlay       = document.getElementById('permOverlay');
+  var reading       = null;
+  var period        = null;
+
+  /* ---------- step helper ---------- */
+  function showStep(n) {
+    for (var i = 1; i <= 4; i++) {
+      document.getElementById('obStep' + i).style.display = (i === n) ? 'block' : 'none';
+    }
+    var dots = document.querySelectorAll('.ob-dot');
+    for (var j = 0; j < dots.length; j++) {
+      var stepNum = parseInt(dots[j].getAttribute('data-step'), 10);
+      dots[j].classList.toggle('active', stepNum === n);
+      dots[j].classList.toggle('done', stepNum < n);
+    }
+  }
+
+  /* ---------- step 1: connect buttons ---------- */
   function askPermission(method) {
     pendingMethod = method;
     document.getElementById('permTitle').textContent =
-      method === 'bluetooth' ? 'aethersync.app wants to pair via Bluetooth' : 'aethersync.app wants to access a USB device';
+      method === 'bluetooth'
+        ? 'aethersync.app wants to pair via Bluetooth'
+        : 'aethersync.app wants to access a USB device';
     document.getElementById('permText').textContent =
       'Allow this site to connect to your health-sensor device and read live vitals (heart rate, SpO₂, sleep)?';
     overlay.classList.add('show');
@@ -79,38 +175,67 @@
 
   document.getElementById('permBlock').addEventListener('click', function () {
     overlay.classList.remove('show');
-    connectStatusEl.style.color = 'var(--red)';
-    connectStatusEl.textContent = 'Connection was blocked. You can retry above.';
+    pendingMethod = null;
   });
+
+  /* ---------- step 2: streaming readings ---------- */
+  var readingList  = document.getElementById('readingList');
+  var streamStatus = document.getElementById('streamStatus');
+  var step2Title   = document.getElementById('obStep2Title');
+  var step2Sub     = document.getElementById('obStep2Sub');
+  var methodLabel  = document.getElementById('methodLabel');
 
   document.getElementById('permAllow').addEventListener('click', function () {
     overlay.classList.remove('show');
-    document.getElementById('connectOpts').style.display = 'none';
-    connectStatusEl.style.color = 'var(--sage)';
-    connectStatusEl.textContent = 'Connected via ' + pendingMethod + ' — receiving sensor data…';
+    if (!pendingMethod) return;
 
-    reading = AS.simulateReading();
-    var rows = [
-      { label: 'Resting Heart Rate', value: reading.restingHR + ' bpm' },
-      { label: 'SpO₂', value: reading.spo2 + '%' },
-      { label: 'Sleep Duration', value: reading.sleepHours + ' h' }
-    ];
-    readingList.style.display = 'flex';
-    rows.forEach(function (r, i) {
-      setTimeout(function () {
-        var row = document.createElement('div');
-        row.className = 'reading-row';
-        row.style.animationDelay = '0s';
-        row.innerHTML = '<span>' + r.label + '</span><span class="rv">' + r.value + '</span>';
-        readingList.appendChild(row);
-        if (i === rows.length - 1) {
-          connectStatusEl.textContent = 'All readings received.';
-          document.getElementById('periodBlock').style.display = 'block';
-        }
-      }, i * 500);
-    });
+    methodLabel.textContent = pendingMethod === 'bluetooth' ? 'Bluetooth' : 'USB';
+    showStep(2);
+
+    /* Phase 1: pairing animation */
+    readingList.innerHTML = '';
+    streamStatus.textContent = '';
+
+    setTimeout(function () {
+      step2Title.innerHTML = 'Receiving sensor data…';
+      step2Sub.textContent  = 'Streaming live vitals from your onboard health sensor. Hold steady.';
+    }, 1200);
+
+    /* Phase 2: stream the readings one by one */
+    setTimeout(function () {
+      reading = AS.simulateReading();
+
+      var rows = [
+        { label: 'Resting Heart Rate',         value: reading.restingHR + ' bpm' },
+        { label: 'Blood Oxygen (SpO₂)',        value: reading.spo2 + '%' },
+        { label: 'Sleep Duration (last night)',value: reading.sleepHours + ' h' }
+      ];
+
+      rows.forEach(function (r, i) {
+        setTimeout(function () {
+          var row = document.createElement('div');
+          row.className = 'reading-row';
+          row.innerHTML =
+            '<span class="rr-dot"></span>' +
+            '<span class="rr-label">' + r.label + '</span>' +
+            '<span class="rr-value">' + r.value + '</span>';
+          readingList.appendChild(row);
+
+          /* Force reflow so transition triggers */
+          void row.offsetWidth;
+          row.classList.add('in');
+
+          if (i === rows.length - 1) {
+            streamStatus.innerHTML =
+              '<span class="ss-check">✓</span> All readings received and stored to your onboard record.';
+            setTimeout(function () { showStep(3); }, 900);
+          }
+        }, i * 700);
+      });
+    }, 2000);
   });
 
+  /* ---------- step 3: AM/PM selection ---------- */
   function selectPeriod(p) {
     period = p;
     document.getElementById('periodAM').classList.toggle('active', p === 'AM');
@@ -120,8 +245,10 @@
   document.getElementById('periodAM').addEventListener('click', function () { selectPeriod('AM'); });
   document.getElementById('periodPM').addEventListener('click', function () { selectPeriod('PM'); });
 
+  /* ---------- step 4: save & redirect ---------- */
   document.getElementById('saveBaselineBtn').addEventListener('click', function () {
     if (!reading || !period) return;
+
     var data = {
       restingHR: reading.restingHR,
       spo2: reading.spo2,
@@ -130,17 +257,26 @@
       notes: '',
       createdAt: new Date().toISOString()
     };
+
     AS.saveBaseline(crewId, data);
 
-    // NEW: baseline reading-ke today's sensor reading hishebeo save koro,
-    // jate dashboard-e giye abar sensor fetch na lage.
+    /* Baseline reading-ke ajker sensor reading hishebeo save koro,
+       jate dashboard-e giye abar sensor fetch na lage */
     AS.saveSensorReading(crewId, reading);
 
-    document.querySelector('.auth-card').innerHTML =
-      '<div class="auth-mark">✓</div><div class="auth-title">Baseline Set</div>' +
-      '<div class="auth-sub">Your ' + period + ' reading is recorded. AetherSync will adapt this over your first two weeks.</div>';
-    setTimeout(function () { window.location.href = 'dashboard.html'; }, 1200);
+    document.getElementById('obFinalMsg').textContent =
+      'Your ' + (period === 'AM' ? 'morning' : 'evening') +
+      ' reading is now your personal baseline. AetherSync will adapt this over your first two weeks using your own check-ins.';
+
+    showStep(4);
+
+    setTimeout(function () {
+      window.location.href = 'dashboard.html';
+    }, 2000);
   });
+
+  /* ---------- kickoff ---------- */
+  showStep(1);
 </script>
 </body>
 </html>
