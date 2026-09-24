@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-<div class="wrap" style="max-width:800px;">
+<div class="wrap" style="max-width:960px;">
   <nav class="top">
     <a class="brand" href="chatbot.html">
       <div class="brand-mark">AS</div>
@@ -18,41 +18,98 @@
     </a>
     <div class="nav-links">
       <a href="index.html">Crew Login</a>
-      <a href="chatbot.html" class="current">Health Assistant</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="chatbot.html" class="current">Assistant</a>
     </div>
   </nav>
 
-  <div class="open-banner">Open to any crew member — no login required. Runs entirely from the onboard trusted knowledge base, no live connection needed.</div>
+  <div class="open-banner">
+    Open to any crew member — no login required. Runs entirely from the onboard
+    trusted knowledge base, no live connection needed.
+  </div>
 
+  <!-- ============ CHAT PANEL ============ -->
   <div class="panel">
     <div class="panel-head">
       <div class="panel-title">Offline Health Assistant</div>
       <div class="panel-note">local knowledge base · decision-support, not diagnosis</div>
     </div>
+
     <div class="chat-box" id="chatBox">
-      <div class="msg bot">Hello. Ask me about symptoms, sleep, radiation, or general health questions. I only answer from the verified onboard knowledge base — if I don't have a supported answer, I'll tell you honestly instead of guessing.</div>
+      <div class="msg bot">
+        Hello. Ask me about symptoms, sleep, radiation, or general health questions.
+        I only answer from the verified onboard knowledge base — if I don't have a
+        supported answer, I'll tell you honestly instead of guessing.
+      </div>
     </div>
+
     <div class="chat-input-row">
-      <input type="text" id="chatInput" placeholder="e.g. I have a headache and I'm not sleeping well" maxlength="140">
+      <input
+        type="text"
+        id="chatInput"
+        placeholder="e.g. I have a headache and I'm not sleeping well"
+        maxlength="140">
       <button class="btn" id="chatSend" style="margin-top:0;">Ask</button>
     </div>
   </div>
 
+  <!-- ============ SESSION LOG ============ -->
   <div class="panel">
     <div class="panel-head">
       <div class="panel-title">Session Question Log</div>
       <div class="panel-note">indexed · synced to Earth research team when a window opens</div>
     </div>
-    <div class="log" id="logBox"><div class="ref">No questions asked yet this session.</div></div>
+    <div class="log" id="logBox">
+      <div class="ref">No questions asked yet this session.</div>
+    </div>
+  </div>
+
+  <!-- ============ 15-DAY TRENDS ============ -->
+  <div class="grid" style="grid-template-columns:1fr 1fr;">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">🔥 Most Asked — 15-day</div>
+        <div class="panel-note">top repeated questions</div>
+      </div>
+      <div id="trendTop" class="trend-list">
+        <div class="trend-empty">No questions yet. Ask something to start building trends.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">❌ Not Found — 15-day</div>
+        <div class="panel-note">ground review queue</div>
+      </div>
+      <div id="trendMissing" class="trend-list">
+        <div class="trend-empty">No unanswered questions in the last 15 days.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ KB INFO ============ -->
+  <div class="sync">
+    <div class="live"><i></i> Local trusted knowledge base v1.3 — verified</div>
+    <div>Offline mode · no live connection used</div>
   </div>
 </div>
 
 <script src="assets/app.js"></script>
 <script>
-  var state = { qCounter: 200, firstLog: true };
-  var chatBox = document.getElementById('chatBox');
-  var chatInput = document.getElementById('chatInput');
+  /* ============================================================
+     LAYER 5 — Offline Health Assistant
+     - Answers from onboard KB (with source)
+     - Logs every question (answered or not)
+     - Renders 15-day trends: top asked + not-found
+     ============================================================ */
 
+  var chatBox  = document.getElementById('chatBox');
+  var chatInput = document.getElementById('chatInput');
+  var logBox   = document.getElementById('logBox');
+
+  var state = { qCounter: 200, firstLog: true };
+
+  /* ---------- append chat message ---------- */
   function appendMsg(text, who, srcText, notFound) {
     var msg = document.createElement('div');
     msg.className = 'msg ' + who + (notFound ? ' notfound' : '');
@@ -67,37 +124,109 @@
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
+  /* ---------- append session log line ---------- */
   function addLogLine(html, cls) {
-    var log = document.getElementById('logBox');
-    if (state.firstLog) { log.innerHTML = ''; state.firstLog = false; }
+    if (state.firstLog) { logBox.innerHTML = ''; state.firstLog = false; }
     var div = document.createElement('div');
     if (cls) div.className = cls;
     div.innerHTML = html;
-    log.insertBefore(div, log.firstChild);
+    logBox.insertBefore(div, logBox.firstChild);
   }
 
+  /* ---------- handle a question ---------- */
   function handleAsk() {
     var text = chatInput.value.trim();
     if (!text) return;
+
     appendMsg(text, 'user');
     chatInput.value = '';
     state.qCounter++;
     var qid = 'Q' + state.qCounter;
 
     var hit = AS.findAnswer(text);
+
     setTimeout(function () {
       if (hit) {
-        appendMsg(hit.answer + ' (This is decision-support, not a diagnosis — please involve ground medical support for anything persistent or severe.)', 'bot', hit.source, false);
+        /* Answered — log with index */
+        AS.logQuestion(text, hit.idx, true);
+
+        appendMsg(
+          hit.answer +
+          ' (This is decision-support, not a diagnosis — please involve ground medical support for anything persistent or severe.)',
+          'bot',
+          hit.source,
+          false
+        );
         addLogLine('<span class="qline">[' + qid + ', [' + hit.idx.join(',') + '], ANSWERED]</span>');
+
       } else {
-        appendMsg("I don't have a sufficiently supported answer for this in the onboard knowledge base. I'm recording this question so ground researchers can review the closest related topics and close this gap for future missions.", 'bot', 'No matching verified index · logged as NOT_FOUND', true);
+        /* Not found — log as missing */
+        AS.logQuestion(text, [], false);
+
+        appendMsg(
+          "I don't have a sufficiently supported answer for this in the onboard knowledge base. I'm recording this question so ground researchers can review the closest related topics and close this gap for future missions.",
+          'bot',
+          'No matching verified index · logged as NOT_FOUND',
+          true
+        );
         addLogLine('<span class="nf">[' + qid + ', [—], NOT_FOUND]</span>');
       }
+
+      /* Refresh the trend panels after every question */
+      renderTrends();
     }, 350);
   }
 
   document.getElementById('chatSend').addEventListener('click', handleAsk);
-  chatInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') handleAsk(); });
+  chatInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') handleAsk();
+  });
+
+  /* ---------- 15-day trend renderer ---------- */
+  function renderTrends() {
+    var trends = AS.getQuestionTrends();
+
+    /* --- Top asked --- */
+    var top = document.getElementById('trendTop');
+    if (!trends.top.length) {
+      top.innerHTML = '<div class="trend-empty">No questions yet. Ask something to start building trends.</div>';
+    } else {
+      top.innerHTML = trends.top.map(function (t, i) {
+        var idxText = t.idx && t.idx.length ? '[' + t.idx.join(',') + ']' : '';
+        return '<div class="trend-row">' +
+          '<span class="trend-rank">#' + (i + 1) + '</span>' +
+          '<span class="trend-q">' + escapeHTML(t.q) + '</span>' +
+          '<span class="trend-idx">' + idxText + '</span>' +
+          '<span class="trend-count">' + t.count + '×</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* --- Not found --- */
+    var miss = document.getElementById('trendMissing');
+    if (!trends.missing.length) {
+      miss.innerHTML = '<div class="trend-empty">No unanswered questions in the last 15 days.</div>';
+    } else {
+      miss.innerHTML = trends.missing.map(function (t) {
+        return '<div class="trend-row trend-miss">' +
+          '<span class="trend-q">' + escapeHTML(t.q) + '</span>' +
+          '<span class="trend-count">' + t.count + '×</span>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  /* ---------- small html escaper ---------- */
+  function escapeHTML(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ---------- initial render ---------- */
+  renderTrends();
 </script>
 </body>
 </html>
