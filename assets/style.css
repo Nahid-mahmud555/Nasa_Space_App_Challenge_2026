@@ -658,6 +658,88 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
 }
 
 /* ============================================================
+   Find-the-Number mini game (dashboard.html)
+   ============================================================ */
+.numgame-intro{
+  font-size:13px;
+  color:var(--ink-dim);
+  line-height:1.6;
+  margin-bottom:12px;
+}
+.numgame-target{
+  font-family:var(--serif);
+  font-size:18px;
+  font-weight:600;
+  color:var(--navy);
+  margin-bottom:12px;
+  padding:10px 14px;
+  background:var(--panel);
+  border:1px dashed var(--line);
+  border-radius:9px;
+  text-align:center;
+  letter-spacing:.02em;
+}
+.numgame-grid{
+  display:grid;
+  grid-template-columns:repeat(10, 1fr);
+  gap:5px;
+  margin-bottom:12px;
+}
+@media (max-width:520px){
+  .numgame-grid{ grid-template-columns:repeat(6, 1fr); }
+}
+.numgame-cell{
+  text-align:center;
+  padding:7px 2px;
+  font-family:ui-monospace, monospace;
+  font-size:11.5px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:6px;
+  cursor:pointer;
+  user-select:none;
+  color:var(--ink-dim);
+  transition:all .12s ease;
+}
+.numgame-cell:hover{
+  border-color:var(--navy);
+  color:var(--navy);
+  transform:translateY(-1px);
+}
+.numgame-cell.miss{
+  background:#f8ece9;
+  border-color:var(--red);
+  color:var(--red);
+  animation:shake .35s ease;
+}
+.numgame-cell.found{
+  background:#eef6f0;
+  border-color:var(--green);
+  color:var(--green);
+  font-weight:700;
+  box-shadow:0 0 0 3px rgba(63,138,99,.18);
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-3px);}
+  75%{transform:translateX(3px);}
+}
+.numgame-status{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12px;
+  color:var(--ink-faint);
+  padding-top:8px;
+  border-top:1px solid var(--line);
+}
+.numgame-status .ng-timer{
+  font-family:ui-monospace, monospace;
+  color:var(--navy);
+  font-weight:600;
+}
+
+/* ============================================================
    Chatbot trends (chatbot.html)
    ============================================================ */
 .trend-list{
