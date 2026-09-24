@@ -96,9 +96,20 @@ var AS = (function () {
     return null;
   }
 
+  /* Simulated sensor reading generator — stands in for a real Bluetooth/USB
+     wearable feed. Values are drawn in a normal-ish range so the demo reads
+     naturally; swap this for the real Web Bluetooth/USB API response later. */
+  function simulateReading() {
+    return {
+      restingHR: (63 + Math.round(Math.random() * 12)).toString(),
+      spo2: (96 + Math.round(Math.random() * 3)).toString(),
+      sleepHours: (5.8 + Math.random() * 2.2).toFixed(1)
+    };
+  }
+
   return {
     login: login, logout: logout, currentCrewId: currentCrewId,
     hasBaseline: hasBaseline, saveBaseline: saveBaseline, getBaseline: getBaseline,
-    requireAuth: requireAuth, findAnswer: findAnswer
+    requireAuth: requireAuth, findAnswer: findAnswer, simulateReading: simulateReading
   };
 })();
