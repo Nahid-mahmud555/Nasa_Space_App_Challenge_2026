@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AetherSync — Baseline Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card" style="max-width:460px; text-align:left;">
+    <div style="text-align:center;">
+      <div class="auth-mark">AS</div>
+      <div class="auth-title">Set Your Personal Baseline</div>
+      <div class="auth-sub">These starting values seed your adaptive baseline. AetherSync will refine this range over your first two weeks using your own sensor data and daily check-ins.</div>
+    </div>
+
+    <form id="baselineForm">
+      <div class="field">
+        <label for="rhr">Resting Heart Rate (bpm)</label>
+        <input type="number" id="rhr" placeholder="e.g. 68" min="30" max="160">
+      </div>
+      <div class="field">
+        <label for="spo2">Typical SpO₂ (%)</label>
+        <input type="number" id="spo2" placeholder="e.g. 98" min="70" max="100">
+      </div>
+      <div class="field">
+        <label for="sleep">Typical Sleep Duration (hours)</label>
+        <input type="number" id="sleep" placeholder="e.g. 7.5" min="0" max="14" step="0.1">
+      </div>
+      <div class="field">
+        <label for="notes">Any known pre-mission conditions? (optional)</label>
+        <textarea id="notes" placeholder="e.g. mild seasonal allergies"></textarea>
+      </div>
+      <button class="btn" type="submit">Save Baseline &amp; Continue</button>
+    </form>
+    <div class="hint">This uses a pre-mission fallback range until enough personal check-in data is collected — this is the cold-start step described in the AetherSync design.</div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  var crewId = AS.currentCrewId();
+  if (!crewId) { window.location.href = 'index.html'; }
+
+  document.getElementById('baselineForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var data = {
+      restingHR: document.getElementById('rhr').value || '68',
+      spo2: document.getElementById('spo2').value || '98',
+      sleepHours: document.getElementById('sleep').value || '7.5',
+      notes: document.getElementById('notes').value || '',
+      createdAt: new Date().toISOString()
+    };
+    AS.saveBaseline(crewId, data);
+    window.location.href = 'dashboard.html';
+  });
+</script>
+</body>
+</html>

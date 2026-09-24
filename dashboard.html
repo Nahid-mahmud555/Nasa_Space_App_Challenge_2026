@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AetherSync — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top">
+    <a class="brand" href="dashboard.html">
+      <div class="brand-mark">AS</div>
+      <div class="brand-name">AetherSync</div>
+    </a>
+    <div class="nav-links">
+      <span class="nav-crew" id="navCrew"></span>
+      <a href="dashboard.html" class="current">Dashboard</a>
+      <a href="chatbot.html">Health Assistant</a>
+      <a href="#" id="logoutLink">Log out</a>
+    </div>
+  </nav>
+
+  <div class="status-hero">
+    <div class="status-dot" id="statusDot"></div>
+    <div class="status-text">
+      <div class="status-label">Current Status</div>
+      <div class="status-title">Normal — within personal baseline</div>
+      <div class="status-desc">All vitals are within your adjusted personal range. No immediate action required.</div>
+    </div>
+    <div class="status-action">
+      <span class="k">Recommended Action</span>
+      Continue routine monitoring. Next check-in: 18:00 MT.
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Vitals vs. Personal Baseline</div>
+          <div class="panel-note">rolling · adaptive · 14-day window</div>
+        </div>
+        <div class="vitals">
+          <div class="vital"><div class="vital-name">Heart Rate</div><div class="vital-val" id="vHR">71 bpm</div>
+            <div class="vital-delta flat">+2.1% baseline</div><div class="vital-bar"><i style="width:34%; background:var(--green);"></i></div></div>
+          <div class="vital"><div class="vital-name">SpO₂</div><div class="vital-val" id="vSpo2">98%</div>
+            <div class="vital-delta flat">−0.4% baseline</div><div class="vital-bar"><i style="width:20%; background:var(--green);"></i></div></div>
+          <div class="vital"><div class="vital-name">Sleep Duration</div><div class="vital-val" id="vSleep">6h 10m</div>
+            <div class="vital-delta up">−14% baseline</div><div class="vital-bar"><i style="width:58%; background:var(--yellow);"></i></div></div>
+          <div class="vital"><div class="vital-name">Radiation Dose</div><div class="vital-val">0.31 mGy</div>
+            <div class="vital-delta flat">expected range</div><div class="vital-bar"><i style="width:26%; background:var(--green);"></i></div></div>
+          <div class="vital"><div class="vital-name">Bone Density Proxy</div><div class="vital-val">−1.2%</div>
+            <div class="vital-delta flat">last scan, day 121</div><div class="vital-bar"><i style="width:15%; background:var(--green);"></i></div></div>
+          <div class="vital"><div class="vital-name">Resting HRV</div><div class="vital-val">54 ms</div>
+            <div class="vital-delta bad">−19% · 5-day trend ↓</div><div class="vital-bar"><i style="width:71%; background:var(--red);"></i></div></div>
+        </div>
+        <div class="baseline-row">
+          <span class="pill">Baseline: In-Space Adjusted (v3)</span>
+          <span class="pill">Source: 14-day statistical range</span>
+          <span class="pill">Trend engine: active</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">⚠ Out-of-Baseline Watch — Resting HRV</div>
+          <div class="panel-note">flagged 2 cycles ago</div>
+        </div>
+        <div class="novel">
+          <div class="novel-head">Novel / Unclassified Pattern</div>
+          <p>HRV has declined steadily for 5 days with no corresponding shift in other vitals. This combination is not present in the trusted knowledge base — <b style="color:var(--ink)">NOT_FOUND</b>. Conservative guidance: increase hydration and sleep, monitor closely. This event will be sent to Earth as a priority item at the next sync.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Daily Check-In</div>
+          <div class="panel-note">behavioral · self-report</div>
+        </div>
+        <div class="checkin-opts">
+          <div class="opt" id="optNormal">Feeling normal</div>
+          <div class="opt" id="optAbn">Feeling off</div>
+        </div>
+        <textarea id="checkinNote" placeholder="Optional note — symptom or mood, e.g. slight headache, low energy..."></textarea>
+        <button class="btn" id="checkinBtn">Submit Check-In</button>
+        <div class="toast" id="checkinToast"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Your Baseline</div>
+          <div class="panel-note">recorded at onboarding</div>
+        </div>
+        <div id="baselineSummary" style="font-size:13px; color:var(--ink-dim); line-height:1.9;"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Indexed Event Log</div>
+          <div class="panel-note">compact storage · REF-deduplicated</div>
+        </div>
+        <div class="log" id="logBox">
+          <div><b>[135, 05, +2.1%, AM, NORMAL, [43,45]]</b></div>
+          <div class="ref">[135, REF:127:05, [43,45]]</div>
+          <div class="nf">[134, 09, −19%, PM, WATCH, NOT_FOUND]</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sync">
+    <div class="live"><i></i> Local trusted knowledge base v1.3 — verified</div>
+    <div>Next scheduled sync in 07h 28m · delta package: 4.2 KB queued</div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  var crewId = AS.requireAuth(true);
+  if (crewId) {
+    document.getElementById('navCrew').textContent = crewId;
+    var bl = AS.getBaseline(crewId);
+    if (bl) {
+      document.getElementById('vHR').textContent = bl.restingHR + ' bpm';
+      document.getElementById('vSpo2').textContent = bl.spo2 + '%';
+      document.getElementById('vSleep').textContent = bl.sleepHours + ' h';
+      document.getElementById('baselineSummary').innerHTML =
+        'Resting HR: <b style="color:var(--ink)">' + bl.restingHR + ' bpm</b><br>' +
+        'SpO₂: <b style="color:var(--ink)">' + bl.spo2 + '%</b><br>' +
+        'Sleep: <b style="color:var(--ink)">' + bl.sleepHours + ' h</b><br>' +
+        (bl.notes ? 'Notes: ' + bl.notes : 'No pre-mission notes recorded.');
+    }
+  }
+
+  document.getElementById('logoutLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    AS.logout();
+  });
+
+  function addLogLine(html, cls) {
+    var log = document.getElementById('logBox');
+    var div = document.createElement('div');
+    if (cls) div.className = cls;
+    div.innerHTML = html;
+    log.insertBefore(div, log.firstChild);
+  }
+
+  var optNormal = document.getElementById('optNormal');
+  var optAbn = document.getElementById('optAbn');
+  var selected = null;
+  optNormal.addEventListener('click', function () {
+    selected = 'normal'; optNormal.classList.add('active-normal'); optAbn.classList.remove('active-abn');
+  });
+  optAbn.addEventListener('click', function () {
+    selected = 'abnormal'; optAbn.classList.add('active-abn'); optNormal.classList.remove('active-normal');
+  });
+
+  document.getElementById('checkinBtn').addEventListener('click', function () {
+    var toast = document.getElementById('checkinToast');
+    if (!selected) {
+      toast.style.color = 'var(--red)';
+      toast.textContent = 'Please select Normal or Feeling off before submitting.';
+      return;
+    }
+    var note = document.getElementById('checkinNote').value.trim();
+    var status = selected === 'normal' ? 'NORMAL' : 'ABNORMAL';
+    addLogLine('<b>[135, SELF, ' + status + (note ? ', "' + note.slice(0, 40) + '"' : '') + ']</b>');
+    toast.style.color = 'var(--green)';
+    toast.textContent = "Check-in recorded and added to today's indexed log.";
+    document.getElementById('checkinNote').value = '';
+    setTimeout(function () { toast.textContent = ''; }, 3500);
+  });
+</script>
+</body>
+</html>

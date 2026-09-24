@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AetherSync — Crew Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="auth-mark">AS</div>
+    <div class="auth-title">AetherSync</div>
+    <div class="auth-sub">Crew health console. Sign in with your Crew ID to load your personal baseline and vitals.</div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="crewId">Crew ID</label>
+        <input type="text" id="crewId" placeholder="e.g. CREW-04" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="passcode">Passcode</label>
+        <input type="password" id="passcode" placeholder="Mission passcode" autocomplete="current-password">
+      </div>
+      <button class="btn" type="submit">Enter Console</button>
+      <div class="error" id="loginError"></div>
+    </form>
+
+    <div class="hint">
+      New to this station? Any Crew ID and passcode will create your session — first login walks you through a short personal baseline setup.<br><br>
+      Don't need to sign in? The <a href="chatbot.html" style="color:var(--navy);">Offline Health Assistant</a> is open to everyone, no login required.
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var id = document.getElementById('crewId').value;
+    var pass = document.getElementById('passcode').value;
+    var err = document.getElementById('loginError');
+    if (AS.login(id, pass)) {
+      err.textContent = '';
+      if (AS.hasBaseline(id.trim())) {
+        window.location.href = 'dashboard.html';
+      } else {
+        window.location.href = 'baseline.html';
+      }
+    } else {
+      err.textContent = 'Please enter both a Crew ID and a passcode.';
+    }
+  });
+</script>
+</body>
+</html>

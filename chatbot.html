@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AetherSync — Offline Health Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap" style="max-width:800px;">
+  <nav class="top">
+    <a class="brand" href="chatbot.html">
+      <div class="brand-mark">AS</div>
+      <div class="brand-name">AetherSync</div>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Crew Login</a>
+      <a href="chatbot.html" class="current">Health Assistant</a>
+    </div>
+  </nav>
+
+  <div class="open-banner">Open to any crew member — no login required. Runs entirely from the onboard trusted knowledge base, no live connection needed.</div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Offline Health Assistant</div>
+      <div class="panel-note">local knowledge base · decision-support, not diagnosis</div>
+    </div>
+    <div class="chat-box" id="chatBox">
+      <div class="msg bot">Hello. Ask me about symptoms, sleep, radiation, or general health questions. I only answer from the verified onboard knowledge base — if I don't have a supported answer, I'll tell you honestly instead of guessing.</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="e.g. I have a headache and I'm not sleeping well" maxlength="140">
+      <button class="btn" id="chatSend" style="margin-top:0;">Ask</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Session Question Log</div>
+      <div class="panel-note">indexed · synced to Earth research team when a window opens</div>
+    </div>
+    <div class="log" id="logBox"><div class="ref">No questions asked yet this session.</div></div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  var state = { qCounter: 200, firstLog: true };
+  var chatBox = document.getElementById('chatBox');
+  var chatInput = document.getElementById('chatInput');
+
+  function appendMsg(text, who, srcText, notFound) {
+    var msg = document.createElement('div');
+    msg.className = 'msg ' + who + (notFound ? ' notfound' : '');
+    msg.textContent = text;
+    if (srcText) {
+      var src = document.createElement('span');
+      src.className = 'src';
+      src.textContent = srcText;
+      msg.appendChild(src);
+    }
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function addLogLine(html, cls) {
+    var log = document.getElementById('logBox');
+    if (state.firstLog) { log.innerHTML = ''; state.firstLog = false; }
+    var div = document.createElement('div');
+    if (cls) div.className = cls;
+    div.innerHTML = html;
+    log.insertBefore(div, log.firstChild);
+  }
+
+  function handleAsk() {
+    var text = chatInput.value.trim();
+    if (!text) return;
+    appendMsg(text, 'user');
+    chatInput.value = '';
+    state.qCounter++;
+    var qid = 'Q' + state.qCounter;
+
+    var hit = AS.findAnswer(text);
+    setTimeout(function () {
+      if (hit) {
+        appendMsg(hit.answer + ' (This is decision-support, not a diagnosis — please involve ground medical support for anything persistent or severe.)', 'bot', hit.source, false);
+        addLogLine('<span class="qline">[' + qid + ', [' + hit.idx.join(',') + '], ANSWERED]</span>');
+      } else {
+        appendMsg("I don't have a sufficiently supported answer for this in the onboard knowledge base. I'm recording this question so ground researchers can review the closest related topics and close this gap for future missions.", 'bot', 'No matching verified index · logged as NOT_FOUND', true);
+        addLogLine('<span class="nf">[' + qid + ', [—], NOT_FOUND]</span>');
+      }
+    }, 350);
+  }
+
+  document.getElementById('chatSend').addEventListener('click', handleAsk);
+  chatInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') handleAsk(); });
+</script>
+</body>
+</html>
