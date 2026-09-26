@@ -14,7 +14,6 @@
 <div class="ob-shell">
   <div class="ob-card">
 
-    <!-- Progress dots -->
     <div class="ob-progress" id="obProgress">
       <span class="ob-dot active" data-step="1"></span>
       <span class="ob-dot" data-step="2"></span>
@@ -22,14 +21,13 @@
       <span class="ob-dot" data-step="4"></span>
     </div>
 
-    <!-- ============ STEP 1: INTRO + CONNECT OPTIONS ============ -->
+    <!-- STEP 1 -->
     <div class="ob-step" id="obStep1">
       <div class="ob-mark">AS</div>
       <div class="ob-title">Welcome aboard, <span id="crewName">crew</span>.</div>
       <div class="ob-sub">
         Before your first check-in, let's pair your onboard health sensor.
-        AetherSync will pull a starting reading to seed your personal baseline —
-        this is the cold-start step described in the mission design.
+        AetherSync will pull a starting reading to seed your personal baseline.
       </div>
 
       <div class="connect-opts">
@@ -47,11 +45,10 @@
 
       <div class="ob-hint">
         Your data never leaves this device until a scheduled sync window opens.
-        Nothing is shared without your confirmation.
       </div>
     </div>
 
-    <!-- ============ STEP 2: SENSOR READINGS STREAMING ============ -->
+    <!-- STEP 2 -->
     <div class="ob-step" id="obStep2" style="display:none;">
       <div class="ob-connecting">
         <div class="pulse-ring"></div>
@@ -62,21 +59,17 @@
       <div class="ob-title" id="obStep2Title">Pairing via <span id="methodLabel">Bluetooth</span>…</div>
       <div class="ob-sub" id="obStep2Sub">
         Establishing a secure channel with your onboard health sensor.
-        This usually takes a moment.
       </div>
 
       <div class="reading-list" id="readingList"></div>
       <div class="stream-status" id="streamStatus"></div>
     </div>
 
-    <!-- ============ STEP 3: AM/PM SELECTION ============ -->
+    <!-- STEP 3 -->
     <div class="ob-step" id="obStep3" style="display:none;">
       <div class="ob-mark small">✓</div>
       <div class="ob-title">Readings received.</div>
-      <div class="ob-sub">
-        When was this reading taken? This helps AetherSync align your
-        baseline to your daily rhythm.
-      </div>
+      <div class="ob-sub">When was this reading taken?</div>
 
       <div class="period-row">
         <div class="period-opt" id="periodAM">
@@ -94,13 +87,12 @@
       <button class="btn" id="saveBaselineBtn" disabled>Save Baseline &amp; Continue</button>
     </div>
 
-    <!-- ============ STEP 4: SAVED / REDIRECTING ============ -->
+    <!-- STEP 4 -->
     <div class="ob-step" id="obStep4" style="display:none;">
       <div class="ob-success-mark">✓</div>
       <div class="ob-title">Baseline recorded.</div>
       <div class="ob-sub" id="obFinalMsg">
         Your reading is now your personal baseline.
-        AetherSync will adapt this over your first two weeks.
       </div>
       <div class="ob-redirect">
         Opening your dashboard<span class="dots"><i></i><i></i><i></i></span>
@@ -110,13 +102,10 @@
   </div>
 </div>
 
-<!-- ============ NATIVE-STYLE PERMISSION OVERLAY ============ -->
 <div class="permission-overlay" id="permOverlay">
   <div class="permission-box">
     <div class="pt" id="permTitle">aethersync.app wants to connect</div>
-    <div class="ps" id="permText">
-      Allow this site to pair with a nearby health-sensor device and read live vitals?
-    </div>
+    <div class="ps" id="permText">Allow this site to pair with a nearby health-sensor device and read live vitals?</div>
     <div class="permission-actions">
       <button id="permBlock">Block</button>
       <button class="allow" id="permAllow">Allow</button>
@@ -126,89 +115,101 @@
 
 <script src="assets/app.js"></script>
 <script>
-  /* ============================================================
-     LAYER 2 — Sensor onboarding
-     Steps:
-       1. Connect (Bluetooth / USB)
-       2. Stream readings (HR, SpO₂, Sleep)
-       3. AM / PM selection
-       4. Save baseline → redirect to dashboard
-     ============================================================ */
+console.log('[AetherSync] Baseline page loaded');
 
-  var crewId = AS.currentCrewId();
-  if (!crewId) { window.location.href = 'index.html'; }
-
+var crewId = AS.currentCrewId();
+if (!crewId) {
+  window.location.href = 'index.html';
+} else {
   document.getElementById('crewName').textContent = crewId;
+}
 
-  var pendingMethod = null;
-  var overlay       = document.getElementById('permOverlay');
-  var reading       = null;
-  var period        = null;
+var pendingMethod = null;
+var overlay = document.getElementById('permOverlay');
+var reading = null;
+var period = null;
 
-  /* ---------- step helper ---------- */
-  function showStep(n) {
-    for (var i = 1; i <= 4; i++) {
-      document.getElementById('obStep' + i).style.display = (i === n) ? 'block' : 'none';
-    }
-    var dots = document.querySelectorAll('.ob-dot');
-    for (var j = 0; j < dots.length; j++) {
-      var stepNum = parseInt(dots[j].getAttribute('data-step'), 10);
-      dots[j].classList.toggle('active', stepNum === n);
-      dots[j].classList.toggle('done', stepNum < n);
-    }
+function showStep(n) {
+  for (var i = 1; i <= 4; i++) {
+    var el = document.getElementById('obStep' + i);
+    if (el) el.style.display = (i === n) ? 'block' : 'none';
+  }
+  var dots = document.querySelectorAll('.ob-dot');
+  for (var j = 0; j < dots.length; j++) {
+    var stepNum = parseInt(dots[j].getAttribute('data-step'), 10);
+    dots[j].classList.toggle('active', stepNum === n);
+    dots[j].classList.toggle('done', stepNum < n);
+  }
+}
+
+function askPermission(method) {
+  console.log('[AetherSync] askPermission:', method);
+  pendingMethod = method;
+
+  var titleEl = document.getElementById('permTitle');
+  var textEl = document.getElementById('permText');
+
+  if (method === 'bluetooth') {
+    titleEl.textContent = 'aethersync.app wants to pair via Bluetooth';
+    textEl.textContent = 'Allow this site to connect to your health-sensor device and read live vitals (heart rate, SpO₂, sleep)?';
+  } else {
+    titleEl.textContent = 'aethersync.app wants to access a USB device';
+    textEl.textContent = 'Allow this site to access a connected USB health-sensor device and read live vitals (heart rate, SpO₂, sleep)?';
   }
 
-  /* ---------- step 1: connect buttons ---------- */
-  function askPermission(method) {
-    pendingMethod = method;
-    document.getElementById('permTitle').textContent =
-      method === 'bluetooth'
-        ? 'aethersync.app wants to pair via Bluetooth'
-        : 'aethersync.app wants to access a USB device';
-    document.getElementById('permText').textContent =
-      'Allow this site to connect to your health-sensor device and read live vitals (heart rate, SpO₂, sleep)?';
-    overlay.classList.add('show');
-  }
+  overlay.classList.add('show');
+}
 
-  document.getElementById('btnBluetooth').addEventListener('click', function () { askPermission('bluetooth'); });
-  document.getElementById('btnUsb').addEventListener('click', function () { askPermission('usb'); });
+/* Connect buttons */
+var btnBt = document.getElementById('btnBluetooth');
+var btnUsb = document.getElementById('btnUsb');
+if (btnBt) btnBt.addEventListener('click', function () { askPermission('bluetooth'); });
+if (btnUsb) btnUsb.addEventListener('click', function () { askPermission('usb'); });
 
-  document.getElementById('permBlock').addEventListener('click', function () {
+/* Block */
+var permBlock = document.getElementById('permBlock');
+if (permBlock) {
+  permBlock.addEventListener('click', function () {
     overlay.classList.remove('show');
     pendingMethod = null;
   });
+}
 
-  /* ---------- step 2: streaming readings ---------- */
-  var readingList  = document.getElementById('readingList');
-  var streamStatus = document.getElementById('streamStatus');
-  var step2Title   = document.getElementById('obStep2Title');
-  var step2Sub     = document.getElementById('obStep2Sub');
-  var methodLabel  = document.getElementById('methodLabel');
-
-  document.getElementById('permAllow').addEventListener('click', function () {
+/* Allow */
+var permAllow = document.getElementById('permAllow');
+if (permAllow) {
+  permAllow.addEventListener('click', function () {
+    console.log('[AetherSync] Permission allowed, method:', pendingMethod);
     overlay.classList.remove('show');
     if (!pendingMethod) return;
 
-    methodLabel.textContent = pendingMethod === 'bluetooth' ? 'Bluetooth' : 'USB';
+    var methodLabel = document.getElementById('methodLabel');
+    if (methodLabel) {
+      methodLabel.textContent = pendingMethod === 'bluetooth' ? 'Bluetooth' : 'USB';
+    }
     showStep(2);
 
-    /* Phase 1: pairing animation */
+    var readingList = document.getElementById('readingList');
+    var streamStatus = document.getElementById('streamStatus');
+    var step2Title = document.getElementById('obStep2Title');
+    var step2Sub = document.getElementById('obStep2Sub');
+
     readingList.innerHTML = '';
     streamStatus.textContent = '';
 
     setTimeout(function () {
       step2Title.innerHTML = 'Receiving sensor data…';
-      step2Sub.textContent  = 'Streaming live vitals from your onboard health sensor. Hold steady.';
+      step2Sub.textContent = 'Streaming live vitals from your onboard health sensor. Hold steady.';
     }, 1200);
 
-    /* Phase 2: stream the readings one by one */
     setTimeout(function () {
       reading = AS.simulateReading();
+      console.log('[AetherSync] Simulated reading:', reading);
 
       var rows = [
-        { label: 'Resting Heart Rate',         value: reading.restingHR + ' bpm' },
-        { label: 'Blood Oxygen (SpO₂)',        value: reading.spo2 + '%' },
-        { label: 'Sleep Duration (last night)',value: reading.sleepHours + ' h' }
+        { label: 'Resting Heart Rate', value: reading.restingHR + ' bpm' },
+        { label: 'Blood Oxygen (SpO₂)', value: reading.spo2 + '%' },
+        { label: 'Sleep Duration (last night)', value: reading.sleepHours + ' h' }
       ];
 
       rows.forEach(function (r, i) {
@@ -220,34 +221,44 @@
             '<span class="rr-label">' + r.label + '</span>' +
             '<span class="rr-value">' + r.value + '</span>';
           readingList.appendChild(row);
-
-          /* Force reflow so transition triggers */
           void row.offsetWidth;
           row.classList.add('in');
 
           if (i === rows.length - 1) {
             streamStatus.innerHTML =
-              '<span class="ss-check">✓</span> All readings received and stored to your onboard record.';
+              '<span class="ss-check">✓</span> All readings received and stored.';
             setTimeout(function () { showStep(3); }, 900);
           }
         }, i * 700);
       });
     }, 2000);
   });
+}
 
-  /* ---------- step 3: AM/PM selection ---------- */
-  function selectPeriod(p) {
-    period = p;
-    document.getElementById('periodAM').classList.toggle('active', p === 'AM');
-    document.getElementById('periodPM').classList.toggle('active', p === 'PM');
-    document.getElementById('saveBaselineBtn').disabled = false;
-  }
-  document.getElementById('periodAM').addEventListener('click', function () { selectPeriod('AM'); });
-  document.getElementById('periodPM').addEventListener('click', function () { selectPeriod('PM'); });
+/* Period selection */
+function selectPeriod(p) {
+  period = p;
+  var amEl = document.getElementById('periodAM');
+  var pmEl = document.getElementById('periodPM');
+  if (amEl) amEl.classList.toggle('active', p === 'AM');
+  if (pmEl) pmEl.classList.toggle('active', p === 'PM');
+  var saveBtn = document.getElementById('saveBaselineBtn');
+  if (saveBtn) saveBtn.disabled = false;
+}
 
-  /* ---------- step 4: save & redirect ---------- */
-  document.getElementById('saveBaselineBtn').addEventListener('click', function () {
-    if (!reading || !period) return;
+var periodAM = document.getElementById('periodAM');
+var periodPM = document.getElementById('periodPM');
+if (periodAM) periodAM.addEventListener('click', function () { selectPeriod('AM'); });
+if (periodPM) periodPM.addEventListener('click', function () { selectPeriod('PM'); });
+
+/* Save baseline */
+var saveBtn = document.getElementById('saveBaselineBtn');
+if (saveBtn) {
+  saveBtn.addEventListener('click', function () {
+    if (!reading || !period) {
+      alert('Please complete the reading and select AM/PM.');
+      return;
+    }
 
     var data = {
       restingHR: reading.restingHR,
@@ -259,24 +270,24 @@
     };
 
     AS.saveBaseline(crewId, data);
-
-    /* Baseline reading-ke ajker sensor reading hishebeo save koro,
-       jate dashboard-e giye abar sensor fetch na lage */
     AS.saveSensorReading(crewId, reading);
 
-    document.getElementById('obFinalMsg').textContent =
-      'Your ' + (period === 'AM' ? 'morning' : 'evening') +
-      ' reading is now your personal baseline. AetherSync will adapt this over your first two weeks using your own check-ins.';
+    var finalMsg = document.getElementById('obFinalMsg');
+    if (finalMsg) {
+      finalMsg.textContent =
+        'Your ' + (period === 'AM' ? 'morning' : 'evening') +
+        ' reading is now your personal baseline.';
+    }
 
     showStep(4);
-
     setTimeout(function () {
       window.location.href = 'dashboard.html';
     }, 2000);
   });
+}
 
-  /* ---------- kickoff ---------- */
-  showStep(1);
+showStep(1);
+console.log('[AetherSync] Baseline page ready ✅');
 </script>
 </body>
 </html>
