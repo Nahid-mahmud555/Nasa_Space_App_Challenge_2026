@@ -238,7 +238,6 @@ var AS = (function () {
     return next;
   }
 
-  /* Compute delta percentage */
   function computeDelta(current, baseline) {
     var c = parseFloat(current);
     var b = parseFloat(baseline);
@@ -248,7 +247,6 @@ var AS = (function () {
     return sign + Math.abs(delta).toFixed(1) + '%';
   }
 
-  /* Mission day = 126 + days since baseline + 1 */
   function getMissionDay(crewId) {
     var base = getJSON('aethersync_baseline_' + crewId);
     var baseDate = base && base.createdAt ? new Date(base.createdAt) : new Date();
@@ -256,7 +254,6 @@ var AS = (function () {
     return 126 + daysSince + 1;
   }
 
-  /* Choose metric from symptom (default Heart Rate) */
   function pickMetric(symptomLabel) {
     if (!symptomLabel) return 'restingHR';
     var s = symptomLabel.toLowerCase();
@@ -314,7 +311,6 @@ var AS = (function () {
     };
   }
 
-  /* Build a mind-game index entry */
   function buildMindGameIndex(crewId, gameResult) {
     var missionDay = getMissionDay(crewId);
     var now = new Date();
