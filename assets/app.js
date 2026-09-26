@@ -270,7 +270,6 @@ var AS = (function () {
     var metric = METRIC_CODES[metricKey] || METRIC_CODES.restingHR;
     var bl = getBaseline(crewId) || {};
 
-    /* Determine current + baseline values for the chosen metric */
     var currentVal, baselineVal;
     if (metricKey === 'spo2') {
       currentVal = sensorData ? sensorData.spo2 : 0;
@@ -293,7 +292,6 @@ var AS = (function () {
       ? '[' + match.idx.join(',') + ']'
       : '[]';
 
-    /* NEW compact format */
     var line = '[' + missionDay + ', ' + metric.code + ', ' + delta +
                ', ' + period + ', ' + status + ', ' + idxPart + ']';
 
