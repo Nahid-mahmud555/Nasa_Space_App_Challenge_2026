@@ -1,5 +1,5 @@
 /* ============================================================
-   AetherSync — shared app logic (5-layer version, FULL)
+   AetherSync — shared app logic (5-layer + custom KB upload)
    ------------------------------------------------------------
    NOTE: This is a front-end-only demo. Login is simulated with
    localStorage (any non-empty Crew ID + passcode is accepted)
@@ -95,12 +95,12 @@ var AS = (function () {
   }
 
   /* ============================================================
-     LAYER 3 — Offline trusted knowledge base
+     LAYER 3 — Built-in offline trusted knowledge base
      ============================================================ */
   var KB = [
     {
       idx: [43, 47],
-      keys: ["headache", "head ache", "migraine"],
+      keys: ["headache", "head ache", "migraine", "head hurts"],
       answer: "Headaches during long-duration missions are often linked to fluid shift, dehydration, or short sleep. Given a recent sleep deviation, this is likely related rather than an isolated event.",
       recommend: "Hydrate, rest in a dim cabin, and re-check in 4 hours.",
       recommendTest: "Log a 24-hour hydration & sleep diary (CSV) so we can rule out sleep-linked triggers.",
@@ -108,7 +108,7 @@ var AS = (function () {
     },
     {
       idx: [45],
-      keys: ["short of breath", "breathless", "spo2", "oxygen", "breathing"],
+      keys: ["short of breath", "breathless", "spo2", "oxygen", "breathing", "can't breathe"],
       answer: "Mild breathlessness can relate to SpO2 fluctuation or exertion in altered-gravity conditions. If current SpO2 is within range, this is most likely transient.",
       recommend: "Pause activity, sit, and re-measure SpO₂ in 10 minutes.",
       recommendTest: "Upload a SpO₂ log (CSV) covering the last 6 hours.",
@@ -116,7 +116,7 @@ var AS = (function () {
     },
     {
       idx: [43],
-      keys: ["heart rate", "palpitation", "racing heart", "hr high"],
+      keys: ["heart rate", "palpitation", "racing heart", "hr high", "fast heart"],
       answer: "Elevated heart rate without other symptoms is commonly linked to activity, stress response, or early-mission cardiovascular adaptation.",
       recommend: "Rest 5 minutes and re-measure.",
       recommendTest: "Upload a 24-hour HR log (CSV) if it recurs.",
@@ -124,7 +124,7 @@ var AS = (function () {
     },
     {
       idx: [48],
-      keys: ["can't sleep", "cannot sleep", "insomnia", "not sleeping", "sleep", "tired", "low energy"],
+      keys: ["can't sleep", "cannot sleep", "insomnia", "not sleeping", "sleep", "tired", "low energy", "exhausted"],
       answer: "Reduced sleep duration is common during high workload periods or light-cycle disruption. Consider adjusting pre-sleep routine and flag this in your next check-in if it persists beyond 3 days.",
       recommend: "Adjust pre-sleep routine; flag if it persists beyond 3 days.",
       recommendTest: "Upload a 3-day sleep diary (CSV).",
@@ -132,21 +132,21 @@ var AS = (function () {
     },
     {
       idx: [52],
-      keys: ["stress", "anxious", "anxiety", "overwhelmed", "isolation", "lonely"],
+      keys: ["stress", "anxious", "anxiety", "overwhelmed", "isolation", "lonely", "depressed", "sad"],
       answer: "Isolation and confinement are known contributors to mood and stress changes on long-duration missions. Structured check-ins and communication with crew or ground support are recommended.",
       recommend: "Schedule structured check-ins and crew/ground conversations.",
       source: "Index [52] — Behavioral Health guidance · confidence: high"
     },
     {
       idx: [46],
-      keys: ["nausea", "dizzy", "dizziness", "vertigo"],
+      keys: ["nausea", "dizzy", "dizziness", "vertigo", "vomiting"],
       answer: "Dizziness or nausea can relate to vestibular adaptation in altered gravity, especially early in a mission. Stay hydrated and avoid sudden movements; monitor for recurrence.",
       recommend: "Stay hydrated, avoid sudden movements, monitor recurrence.",
       source: "Index [46] — Neuro-Vestibular guidance · confidence: moderate"
     },
     {
       idx: [49],
-      keys: ["bone", "joint pain", "joint", "muscle pain", "muscle"],
+      keys: ["bone", "joint pain", "joint", "muscle pain", "muscle", "back pain", "backache"],
       answer: "Musculoskeletal discomfort can relate to bone/muscle density changes under reduced load. Continue prescribed resistance exercise; this will be cross-checked at the next periodic scan.",
       recommend: "Continue prescribed resistance exercise.",
       recommendTest: "Upload latest DEXA scan result (PDF).",
@@ -161,11 +161,39 @@ var AS = (function () {
     },
     {
       idx: [47],
-      keys: ["fever", "chills", "temperature", "hot", "cold"],
+      keys: ["fever", "chills", "temperature", "hot", "cold", "flu"],
       answer: "Fever or chills in a closed habitat can indicate an immune response or environmental factor. Hydrate, rest, and re-check temperature in 4 hours. If it persists, this will be escalated to ground medical review.",
       recommend: "Hydrate, rest, re-check temperature in 4 hours.",
       recommendTest: "Upload a body-temperature log (CSV) covering the last 12 hours.",
       source: "Index [47] — Immune & Environmental guidance · confidence: moderate"
+    },
+    {
+      idx: [51],
+      keys: ["cough", "sore throat", "throat", "cold", "runny nose", "congestion"],
+      answer: "Upper-respiratory symptoms in a closed habitat are usually self-limiting. Hydrate, rest, monitor temperature, and avoid close contact with other crew until symptoms subside.",
+      recommend: "Hydrate, rest, monitor temperature, limit close contact.",
+      source: "Index [51] — Respiratory guidance · confidence: moderate"
+    },
+    {
+      idx: [50],
+      keys: ["eye", "eye pain", "vision", "blurry", "blurred vision"],
+      answer: "Visual changes in microgravity are common — often related to fluid shifts affecting the eye. If vision is persistently blurred, log it for the next periodic scan.",
+      recommend: "Note the change, avoid eye strain, flag at next check-in.",
+      source: "Index [50] — Ocular guidance · confidence: moderate"
+    },
+    {
+      idx: [53],
+      keys: ["stomach", "stomach pain", "abdominal", "belly", "digestive", "constipation", "diarrhea"],
+      answer: "Gastrointestinal discomfort can relate to dietary shifts or adaptation to a closed environment. Hydrate and monitor for recurrence or persistence.",
+      recommend: "Hydrate, note dietary changes, monitor for 24 hours.",
+      source: "Index [53] — Gastrointestinal guidance · confidence: moderate"
+    },
+    {
+      idx: [54],
+      keys: ["chest pain", "chest", "heart pain"],
+      answer: "Chest pain requires careful evaluation — log this immediately. AetherSync will escalate it to ground medical on the next sync window regardless of the reading.",
+      recommend: "Stop activity, sit calmly, log immediately, await ground review.",
+      source: "Index [54] — Cardiovascular urgent flag · confidence: high"
     }
   ];
 
@@ -216,7 +244,6 @@ var AS = (function () {
     return next;
   }
 
-  /* Records start at Day 1 */
   function buildCompactIndex(crewId, sensorData, symptomLabel, match, selfStatus) {
     var counter = getLogCounter(crewId) + 1;
     var day = counter;
@@ -255,7 +282,6 @@ var AS = (function () {
   function getRecords(crewId) {
     return getJSON('aethersync_records_' + crewId) || [];
   }
-  /* Alias kept for backward compatibility */
   function getIndexEntries(crewId) {
     return getRecords(crewId);
   }
@@ -279,31 +305,16 @@ var AS = (function () {
      ============================================================ */
   function getPuzzles() {
     return [
-      {
-        q: "If a rover travels 30 km in 3 hours, how far in 7 hours at the same speed?",
-        opts: ["60 km", "70 km", "80 km", "90 km"],
-        ans: 1
-      },
-      {
-        q: "Which number comes next: 2, 6, 12, 20, ___?",
-        opts: ["28", "30", "32", "36"],
-        ans: 1
-      },
-      {
-        q: "Rearrange: 'N O O M' — which word can you form?",
-        opts: ["noon", "moon", "mono", "none"],
-        ans: 1
-      },
-      {
-        q: "All crew are scientists. Some scientists are pilots. Therefore:",
-        opts: ["All crew are pilots", "Some crew may be pilots", "No crew are pilots", "Cannot determine"],
-        ans: 1
-      },
-      {
-        q: "If today is Wednesday, what day is it in 100 days?",
-        opts: ["Thursday", "Friday", "Saturday", "Sunday"],
-        ans: 1
-      }
+      { q: "If a rover travels 30 km in 3 hours, how far in 7 hours at the same speed?",
+        opts: ["60 km", "70 km", "80 km", "90 km"], ans: 1 },
+      { q: "Which number comes next: 2, 6, 12, 20, ___?",
+        opts: ["28", "30", "32", "36"], ans: 1 },
+      { q: "Rearrange: 'N O O M' — which word can you form?",
+        opts: ["noon", "moon", "mono", "none"], ans: 1 },
+      { q: "All crew are scientists. Some scientists are pilots. Therefore:",
+        opts: ["All crew are pilots", "Some crew may be pilots", "No crew are pilots", "Cannot determine"], ans: 1 },
+      { q: "If today is Wednesday, what day is it in 100 days?",
+        opts: ["Thursday", "Friday", "Saturday", "Sunday"], ans: 1 }
     ];
   }
 
@@ -384,13 +395,208 @@ var AS = (function () {
   }
 
   /* ============================================================
-     LAYER 3 — Final PDF-style report (opens print dialog)
+     CUSTOM KNOWLEDGE BASE — uploaded documents
+     ============================================================ */
+
+  /* stop words for keyword extraction */
+  var STOP_WORDS = ['the','a','an','and','or','but','if','then','so','as','of','to','in','on','at','by','for','with','from','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','should','could','may','might','this','that','these','those','it','its','they','them','their','he','she','his','her','we','our','you','your','i','me','my','also','such','any','all','may','can','not','no','yes','very','only','into','over','under','than','then','there','here','when','where','how','why','what','which','who'];
+
+  function extractKeywords(text) {
+    var words = String(text).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/);
+    var freq = {};
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i];
+      if (w.length < 3) continue;
+      if (STOP_WORDS.indexOf(w) !== -1) continue;
+      freq[w] = (freq[w] || 0) + 1;
+    }
+    var list = [];
+    for (var k in freq) list.push({ word: k, count: freq[k] });
+    list.sort(function (a, b) { return b.count - a.count; });
+    return list.slice(0, 14).map(function (x) { return x.word; });
+  }
+
+  /* split document into paragraph-sized chunks with line tracking */
+  function splitIntoChunks(rawText) {
+    var chunks = [];
+    var lines = String(rawText).split(/\r?\n/);
+    var current = '';
+    var currentStart = 1;
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+
+      if (!line) {
+        if (current.trim()) {
+          chunks.push({ text: current.trim(), startLine: currentStart });
+          current = '';
+        }
+        continue;
+      }
+
+      /* If line looks like a short heading, break here */
+      var isHeading = line.length < 60 && (line.endsWith(':') ||
+                      (line === line.toUpperCase() && line.length > 3));
+
+      if (isHeading && current.trim()) {
+        chunks.push({ text: current.trim(), startLine: currentStart });
+        current = line;
+        currentStart = i + 1;
+      } else {
+        if (!current) currentStart = i + 1;
+        current += (current ? ' ' : '') + line;
+      }
+
+      /* force break every ~400 chars */
+      if (current.length > 400) {
+        chunks.push({ text: current.trim(), startLine: currentStart });
+        current = '';
+      }
+    }
+
+    if (current.trim()) {
+      chunks.push({ text: current.trim(), startLine: currentStart });
+    }
+    return chunks;
+  }
+
+  /* build custom KB from raw text */
+  function buildCustomKB(crewId, fileName, rawText) {
+    var chunks = splitIntoChunks(rawText);
+    var entries = [];
+    var charsPerPage = 1800; /* approximate chars per page */
+    var cumulativeChars = 0;
+
+    for (var i = 0; i < chunks.length; i++) {
+      var c = chunks[i];
+      if (c.text.length < 25) continue;
+
+      var keywords = extractKeywords(c.text);
+      var approxPage = Math.max(1, Math.floor(cumulativeChars / charsPerPage) + 1);
+      cumulativeChars += c.text.length;
+
+      entries.push({
+        id: 'C' + (entries.length + 1),
+        text: c.text,
+        keywords: keywords,
+        line: c.startLine,
+        page: approxPage,
+        source: fileName
+      });
+    }
+
+    var key = 'aethersync_kb_custom_' + crewId;
+    setJSON(key, {
+      fileName: fileName,
+      entries: entries,
+      uploadedAt: new Date().toISOString(),
+      totalChunks: entries.length
+    });
+
+    return entries.length;
+  }
+
+  function getCustomKB(crewId) {
+    return getJSON('aethersync_kb_custom_' + crewId) || null;
+  }
+
+  /* smart search inside custom KB */
+  function searchCustomKB(crewId, query) {
+    var kb = getCustomKB(crewId);
+    if (!kb || !kb.entries || !kb.entries.length) return null;
+
+    var qKeywords = extractKeywords(query);
+    if (!qKeywords.length) return null;
+
+    var qLower = query.toLowerCase();
+    var best = null;
+    var bestScore = 0;
+    var allScored = [];
+
+    for (var i = 0; i < kb.entries.length; i++) {
+      var e = kb.entries[i];
+      var score = 0;
+
+      /* keyword overlap */
+      for (var qk = 0; qk < qKeywords.length; qk++) {
+        if (e.keywords.indexOf(qKeywords[qk]) !== -1) score += 3;
+      }
+
+      /* substring bonus */
+      var eLower = e.text.toLowerCase();
+      for (var wk = 0; wk < qKeywords.length; wk++) {
+        if (eLower.indexOf(qKeywords[wk]) !== -1) score += 1.5;
+      }
+
+      /* exact phrase bonus */
+      if (eLower.indexOf(qLower) !== -1) score += 8;
+
+      /* partial phrase: any 4+ char word of query inside text */
+      var qWords = qLower.split(/\s+/);
+      for (var w = 0; w < qWords.length; w++) {
+        if (qWords[w].length >= 5 && eLower.indexOf(qWords[w]) !== -1) score += 1;
+      }
+
+      if (score > 0) {
+        allScored.push({ entry: e, score: score });
+        if (score > bestScore) {
+          bestScore = score;
+          best = e;
+        }
+      }
+    }
+
+    allScored.sort(function (a, b) { return b.score - a.score; });
+
+    if (!best) {
+      return {
+        found: false,
+        best: null,
+        closest: [],
+        confidence: 0
+      };
+    }
+
+    var confidence = Math.min(96, Math.round(35 + bestScore * 6));
+    return {
+      found: true,
+      best: best,
+      confidence: confidence,
+      closest: allScored.slice(0, 3)
+    };
+  }
+
+  /* log NOT_FOUND queries with closest matches */
+  function logMissingQuery(crewId, query, closest) {
+    var key = 'aethersync_missing_' + crewId;
+    var list = getJSON(key) || [];
+    list.unshift({
+      query: query,
+      closest: closest || [],
+      at: new Date().toISOString()
+    });
+    if (list.length > 100) list = list.slice(0, 100);
+    setJSON(key, list);
+  }
+
+  function getMissingQueries(crewId) {
+    return getJSON('aethersync_missing_' + crewId) || [];
+  }
+
+  function clearCustomKB(crewId) {
+    try { localStorage.removeItem('aethersync_kb_custom_' + crewId); } catch (e) {}
+  }
+
+  /* ============================================================
+     LAYER 3 — Final PDF-style report
      ============================================================ */
   function buildReportHTML(crewId) {
     var bl = getBaseline(crewId) || {};
     var records = getRecords(crewId);
     var tests = getTestUploads(crewId);
     var games = getGameResults(crewId);
+    var customKB = getCustomKB(crewId);
+    var missing = getMissingQueries(crewId);
 
     var rows = records.map(function (r) {
       var idxText = (r.idx && r.idx.length)
@@ -419,6 +625,17 @@ var AS = (function () {
       }
       return '<li>' + line + '</li>';
     }).join('');
+
+    var missingRows = missing.slice(0, 20).map(function (m) {
+      var closestText = m.closest && m.closest.length
+        ? m.closest[0].id + ' (p.' + m.closest[0].page + ' L.' + m.closest[0].line + ')'
+        : '—';
+      return '<li>"' + m.query + '" → closest ' + closestText + '</li>';
+    }).join('');
+
+    var kbInfo = customKB
+      ? 'Custom document "' + customKB.fileName + '" — ' + customKB.entries.length + ' indexed chunks'
+      : 'Default built-in KB v1.3';
 
     var html = '';
     html += '<!DOCTYPE html><html><head><meta charset="utf-8">';
@@ -460,6 +677,15 @@ var AS = (function () {
     html += '<div class="sec"><h2>Mind Game Results (' + games.length + ')</h2><ul>';
     html += gameRows || '<li>None</li>';
     html += '</ul></div>';
+
+    html += '<div class="sec"><h2>Knowledge Base</h2>';
+    html += '<p>' + kbInfo + '</p></div>';
+
+    if (missingRows) {
+      html += '<div class="sec"><h2>Unresolved Queries (' + missing.length + ')</h2><ul>';
+      html += missingRows;
+      html += '</ul></div>';
+    }
 
     html += '<div class="sec"><h2>Notes</h2>';
     html += '<p style="font-size:12.5px;line-height:1.6;">';
@@ -518,6 +744,14 @@ var AS = (function () {
     /* Layer 5 — chatbot trends */
     logQuestion: logQuestion,
     getQuestionTrends: getQuestionTrends,
+
+    /* Custom KB */
+    buildCustomKB: buildCustomKB,
+    getCustomKB: getCustomKB,
+    searchCustomKB: searchCustomKB,
+    logMissingQuery: logMissingQuery,
+    getMissingQueries: getMissingQueries,
+    clearCustomKB: clearCustomKB,
 
     /* Layer 3 — final report */
     buildReportHTML: buildReportHTML
