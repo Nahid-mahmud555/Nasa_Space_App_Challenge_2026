@@ -1234,3 +1234,166 @@ input::placeholder, textarea::placeholder{color:var(--ink-faint);}
   0%, 80%, 100%{transform:translateY(0); opacity:.4;}
   40%{transform:translateY(-4px); opacity:1;}
 }
+
+/* ============================================================
+   NEW: Onboard Index Card (dashboard.html)
+   ============================================================ */
+#indexCardBox{ margin-top:16px; }
+
+.index-card{
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,#fbf8f0 0%,#f4eee0 100%);
+  border-radius:12px;
+  padding:16px 18px;
+  box-shadow:0 2px 0 rgba(35,31,24,.03);
+  animation:idxIn .4s ease;
+}
+.index-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding-bottom:10px;
+  margin-bottom:12px;
+  border-bottom:1px dashed var(--line);
+}
+.idx-label{
+  font-family:var(--serif);
+  font-size:14px;
+  font-weight:600;
+  color:var(--ink);
+  letter-spacing:.01em;
+}
+.idx-status{
+  font-size:11px;
+  font-weight:600;
+  padding:4px 10px;
+  border-radius:999px;
+  letter-spacing:.05em;
+}
+.idx-status-ok{
+  background:#eef6f0; color:var(--green);
+  border:1px solid #cfe4d5;
+}
+.idx-status-watch{
+  background:#fbf3de; color:var(--yellow);
+  border:1px solid #e3ca8f;
+}
+
+.index-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px 14px;
+  margin-bottom:14px;
+}
+@media (max-width:520px){
+  .index-grid{ grid-template-columns:1fr; }
+}
+
+.idx-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:10px;
+  font-size:12.5px;
+  padding:4px 0;
+  border-bottom:1px dotted rgba(226,217,194,.7);
+}
+.idx-row:last-child{ border-bottom:none; }
+.idx-key{
+  color:var(--ink-faint);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  font-size:10.5px;
+  flex-shrink:0;
+}
+.idx-val{
+  color:var(--ink);
+  text-align:right;
+  font-size:12.5px;
+  line-height:1.5;
+}
+.idx-mono{
+  font-family:ui-monospace, monospace;
+  font-size:11.5px;
+  color:var(--sage);
+}
+
+.index-line-wrap{
+  background:#f9f4e6;
+  border:1px dashed var(--line);
+  border-radius:9px;
+  padding:10px 12px;
+  margin-bottom:10px;
+}
+.idx-line-label{
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  color:var(--ink-faint);
+  margin-bottom:6px;
+}
+.idx-line{
+  font-family:ui-monospace, monospace;
+  font-size:12px;
+  color:var(--ink);
+  word-break:break-word;
+  line-height:1.55;
+}
+
+.index-loc{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11.5px;
+  color:var(--ink-faint);
+  padding-top:8px;
+  border-top:1px solid var(--line);
+}
+.idx-pin{
+  color:var(--sage);
+  font-size:12px;
+}
+.index-loc code{
+  font-family:ui-monospace, monospace;
+  font-size:11px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:5px;
+  padding:2px 6px;
+  color:var(--ink-dim);
+}
+
+/* ============================================================
+   NEW: Custom KB preview (chatbot.html upload panel)
+   ============================================================ */
+.kb-preview-card{
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:linear-gradient(180deg,#fbf8f0 0%,#f4eee0 100%);
+  padding:12px 14px;
+  animation:fadeIn .35s ease;
+}
+.kb-preview-head{
+  font-family:var(--serif);
+  font-size:14px;
+  font-weight:600;
+  color:var(--navy);
+  margin-bottom:4px;
+}
+.kb-preview-meta{
+  font-size:11.5px;
+  color:var(--ink-faint);
+  font-family:ui-monospace, monospace;
+  margin-bottom:10px;
+}
+.kb-preview-sample{
+  font-size:12.5px;
+  color:var(--ink-dim);
+  line-height:1.55;
+  padding-top:10px;
+  border-top:1px dashed var(--line);
+}
+.kb-preview-sample b{
+  color:var(--ink);
+  font-weight:600;
+}
