@@ -113,6 +113,7 @@
         <div class="upload-status" id="uploadStatus"></div>
       </div>
 
+      <!-- MIND GAMES -->
       <div class="panel" id="mindGamesPanel" style="display:none;">
         <div class="panel-head">
           <div class="panel-title">🧠 Mind Games — 5-Day Assessment</div>
@@ -210,99 +211,60 @@
 <script src="assets/app.js"></script>
 <script>
 /* ============================================================
-   LAYER 3 — Dashboard (fully wired, with error logging)
+   LAYER 3 — Dashboard
+   Index format: [127, 05, +33.3%, AM, NORMAL, [43,45]]
    ============================================================ */
 
-console.log('[AetherSync] Dashboard script starting...');
+console.log('[AetherSync] Dashboard starting...');
 
-/* ---------- Auth check ---------- */
 var crewId = AS.currentCrewId();
-if (!crewId) {
-  console.warn('[AetherSync] Not logged in → index.html');
-  window.location.href = 'index.html';
-} else if (!AS.hasBaseline(crewId)) {
-  console.warn('[AetherSync] No baseline → baseline.html');
-  window.location.href = 'baseline.html';
-} else {
-  console.log('[AetherSync] Crew:', crewId);
-  bootDashboard();
-}
+if (!crewId) { window.location.href = 'index.html'; }
+else if (!AS.hasBaseline(crewId)) { window.location.href = 'baseline.html'; }
+else { boot(); }
 
-function bootDashboard() {
-  /* ---------- Nav ---------- */
-  var navCrew = document.getElementById('navCrew');
-  if (navCrew) navCrew.textContent = crewId;
+function boot() {
+  document.getElementById('navCrew').textContent = crewId;
 
-  /* ---------- Baseline display ---------- */
   var bl = AS.getBaseline(crewId) || {};
-  var vHREl = document.getElementById('vHR');
-  var vSpo2El = document.getElementById('vSpo2');
-  var vSleepEl = document.getElementById('vSleep');
-  var bsEl = document.getElementById('baselineSummary');
+  document.getElementById('vHR').textContent = (bl.restingHR || '—') + ' bpm';
+  document.getElementById('vSpo2').textContent = (bl.spo2 || '—') + '%';
+  document.getElementById('vSleep').textContent = (bl.sleepHours || '—') + ' h';
+  document.getElementById('baselineSummary').innerHTML =
+    'Resting HR: <b>' + (bl.restingHR || '—') + ' bpm</b><br>' +
+    'SpO₂: <b>' + (bl.spo2 || '—') + '%</b><br>' +
+    'Sleep: <b>' + (bl.sleepHours || '—') + ' h</b><br>' +
+    'Recorded: ' + (bl.period || '—');
 
-  if (vHREl) vHREl.textContent = (bl.restingHR || '—') + ' bpm';
-  if (vSpo2El) vSpo2El.textContent = (bl.spo2 || '—') + '%';
-  if (vSleepEl) vSleepEl.textContent = (bl.sleepHours || '—') + ' h';
-  if (bsEl) {
-    bsEl.innerHTML =
-      'Resting HR: <b>' + (bl.restingHR || '—') + ' bpm</b><br>' +
-      'SpO₂: <b>' + (bl.spo2 || '—') + '%</b><br>' +
-      'Sleep: <b>' + (bl.sleepHours || '—') + ' h</b><br>' +
-      'Recorded: ' + (bl.period || '—') + ' · ' +
-      (bl.createdAt ? new Date(bl.createdAt).toLocaleDateString() : '—');
-  }
+  document.getElementById('logoutLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    AS.logout();
+  });
 
-  /* ---------- Logout ---------- */
-  var logoutLink = document.getElementById('logoutLink');
-  if (logoutLink) {
-    logoutLink.addEventListener('click', function (e) {
-      e.preventDefault();
-      AS.logout();
-    });
-  }
-
-  /* ---------- Sensor auto-capture ---------- */
+  /* Sensor capture */
   var todaySensor = AS.getTodaySensor(crewId);
   if (!todaySensor) {
     todaySensor = AS.simulateReading();
     AS.saveSensorReading(crewId, todaySensor);
   }
-  var sensorMini = document.getElementById('sensorMini');
-  if (sensorMini) {
-    sensorMini.innerHTML =
-      '<div class="sensor-line"><span>Resting HR</span><b>' + todaySensor.restingHR + ' bpm</b></div>' +
-      '<div class="sensor-line"><span>SpO₂</span><b>' + todaySensor.spo2 + '%</b></div>' +
-      '<div class="sensor-line"><span>Sleep</span><b>' + todaySensor.sleepHours + ' h</b></div>';
+  document.getElementById('sensorMini').innerHTML =
+    '<div class="sensor-line"><span>Resting HR</span><b>' + todaySensor.restingHR + ' bpm</b></div>' +
+    '<div class="sensor-line"><span>SpO₂</span><b>' + todaySensor.spo2 + '%</b></div>' +
+    '<div class="sensor-line"><span>Sleep</span><b>' + todaySensor.sleepHours + ' h</b></div>';
+
+  /* Mind Games */
+  if (AS.shouldRunMindGames(crewId)) {
+    document.getElementById('mindGamesPanel').style.display = 'block';
+    initMindGames();
   }
 
-  /* ---------- Mind Games ---------- */
-  try {
-    if (AS.shouldRunMindGames(crewId)) {
-      var mgPanel = document.getElementById('mindGamesPanel');
-      if (mgPanel) mgPanel.style.display = 'block';
-      initMindGames();
-    }
-  } catch (e) {
-    console.error('[AetherSync] Mind games init error:', e);
-  }
+  /* Continue button */
+  document.getElementById('toStepSymptoms').addEventListener('click', function () {
+    document.getElementById('stepSensor').style.display = 'none';
+    document.getElementById('stepSymptoms').style.display = 'block';
+    document.getElementById('flowStep').textContent = 'step 2 of 4';
+  });
 
-  /* ---------- Step 1 → Step 2 ---------- */
-  var btnContinue = document.getElementById('toStepSymptoms');
-  if (btnContinue) {
-    btnContinue.addEventListener('click', function () {
-      console.log('[AetherSync] Continue clicked');
-      var s1 = document.getElementById('stepSensor');
-      var s2 = document.getElementById('stepSymptoms');
-      var fs = document.getElementById('flowStep');
-      if (s1) s1.style.display = 'none';
-      if (s2) s2.style.display = 'block';
-      if (fs) fs.textContent = 'step 2 of 4';
-    });
-  } else {
-    console.error('[AetherSync] toStepSymptoms button missing');
-  }
-
-  /* ---------- Symptom chips ---------- */
+  /* Symptom chips */
   var selectedSym = null;
   var symLabels = {
     normal: 'Feeling normal', fever: 'Fever / chills', headache: 'Headache',
@@ -314,84 +276,81 @@ function bootDashboard() {
   };
 
   var chipEls = document.querySelectorAll('#symptomChips .chip');
-  console.log('[AetherSync] Found', chipEls.length, 'chips');
   for (var ci = 0; ci < chipEls.length; ci++) {
     (function (el) {
       el.addEventListener('click', function () {
         for (var cj = 0; cj < chipEls.length; cj++) chipEls[cj].classList.remove('chip-active');
         el.classList.add('chip-active');
         selectedSym = el.getAttribute('data-sym');
-        console.log('[AetherSync] Symptom selected:', selectedSym);
       });
     })(chipEls[ci]);
   }
 
-  /* ---------- Step 2 → Step 3 ---------- */
-  var btnSubmit = document.getElementById('toStepResult');
-  if (btnSubmit) {
-    btnSubmit.addEventListener('click', function () {
-      console.log('[AetherSync] Submit clicked, sym =', selectedSym);
-      if (!selectedSym) {
-        alert('Please pick how you feel before submitting.');
-        return;
-      }
+  /* Submit */
+  document.getElementById('toStepResult').addEventListener('click', function () {
+    if (!selectedSym) {
+      alert('Please pick how you feel before submitting.');
+      return;
+    }
 
-      var note = (document.getElementById('symptomNote').value || '').trim();
-      var queryText = note || symQueryText[selectedSym] || symLabels[selectedSym];
-      var selfStatus = selectedSym === 'normal' ? 'normal' : 'abnormal';
-      var match = AS.matchSymptom(queryText, todaySensor);
+    var note = (document.getElementById('symptomNote').value || '').trim();
+    var queryText = note || symQueryText[selectedSym] || symLabels[selectedSym];
+    var selfStatus = selectedSym === 'normal' ? 'normal' : 'abnormal';
+    var match = AS.matchSymptom(queryText, todaySensor);
 
-      var indexEntry = AS.buildCompactIndex(crewId, todaySensor, symLabels[selectedSym], match, selfStatus);
-      AS.saveIndexEntry(crewId, indexEntry);
-      AS.bumpLogCounter(crewId);
+    /* Build index entry with the new format */
+    var indexEntry = AS.buildCompactIndex(crewId, todaySensor, symLabels[selectedSym], match, selfStatus);
+    AS.saveIndexEntry(crewId, indexEntry);
+    AS.bumpLogCounter(crewId);
 
-      var box = document.getElementById('resultBox');
-      if (selfStatus === 'normal') {
-        box.innerHTML =
-          '<div class="res-head ok">All good — noted as normal for you</div>' +
-          '<div class="res-body">AetherSync has folded today\'s reading into your adaptive baseline.</div>' +
-          '<div class="res-src">Source: self-report · confidence: high</div>';
-      } else if (match) {
-        box.innerHTML =
-          '<div class="res-head warn">AI Guidance — matched to knowledge base</div>' +
-          '<div class="res-body">' + match.answer + '</div>' +
-          '<div class="res-body" style="margin-top:8px;"><b>Recommended:</b> ' + (match.recommend || 'Continue monitoring.') + '</div>' +
-          '<div class="res-src">' + match.source + '</div>';
-      } else {
-        box.innerHTML =
-          '<div class="res-head nf">No verified match found</div>' +
-          '<div class="res-body">Logged for ground review. No guess is made.</div>' +
-          '<div class="res-src">NOT_FOUND · no source cited</div>';
-      }
+    var box = document.getElementById('resultBox');
+    if (selfStatus === 'normal') {
+      box.innerHTML =
+        '<div class="res-head ok">All good — noted as normal for you</div>' +
+        '<div class="res-body">AetherSync has folded today\'s reading into your adaptive baseline.</div>' +
+        '<div class="res-src">Source: self-report · confidence: high</div>';
+    } else if (match) {
+      box.innerHTML =
+        '<div class="res-head warn">AI Guidance — matched to knowledge base</div>' +
+        '<div class="res-body">' + match.answer + '</div>' +
+        '<div class="res-body" style="margin-top:8px;"><b>Recommended:</b> ' + (match.recommend || 'Continue monitoring.') + '</div>' +
+        '<div class="res-src">' + match.source + '</div>';
+    } else {
+      box.innerHTML =
+        '<div class="res-head nf">No verified match found</div>' +
+        '<div class="res-body">Logged for ground review. No guess is made.</div>' +
+        '<div class="res-src">NOT_FOUND · no source cited</div>';
+    }
 
-      var savedNote = document.getElementById('savedNote');
-      if (savedNote) {
-        savedNote.innerHTML = '<span class="saved-check">✓</span> Stored to your onboard record · will sync on next window';
-      }
+    document.getElementById('savedNote').innerHTML =
+      '<span class="saved-check">✓</span> Stored to your onboard record · will sync on next window';
 
-      renderIndexCard(indexEntry, match, selfStatus);
+    renderIndexCard(indexEntry, match, selfStatus);
 
-      if (match && match.recommendTest) {
-        renderTestSuggestion(match.recommendTest);
-        var tuPanel = document.getElementById('testUploadPanel');
-        if (tuPanel) tuPanel.style.display = 'block';
-      }
+    if (match && match.recommendTest) {
+      document.getElementById('testSuggestBox').style.display = 'block';
+      document.getElementById('testSuggestBox').innerHTML =
+        '<div class="test-suggest">' +
+          '<div class="ts-head">🧪 Test Recommended</div>' +
+          '<div class="ts-body">' + match.recommendTest + '</div>' +
+          '<div class="ts-hint">Upload the test result (PDF or CSV) below.</div>' +
+        '</div>';
+      document.getElementById('uploadHint').textContent = match.recommendTest;
+      document.getElementById('testUploadPanel').style.display = 'block';
+    }
 
-      document.getElementById('stepSymptoms').style.display = 'none';
-      document.getElementById('stepResult').style.display = 'block';
-      document.getElementById('flowStep').textContent = 'step 3 of 4';
+    document.getElementById('stepSymptoms').style.display = 'none';
+    document.getElementById('stepResult').style.display = 'block';
+    document.getElementById('flowStep').textContent = 'step 3 of 4';
 
-      renderRecentCheckIns();
-      updateStatusHero(selfStatus, match);
-    });
-  }
+    renderRecentCheckIns();
+    updateStatusHero(selfStatus, match);
+  });
 
-  /* ---------- Index card ---------- */
+  /* Index card */
   function renderIndexCard(entry, match, selfStatus) {
     var box = document.getElementById('indexCardBox');
-    if (!box) return;
     var idxText = entry.idx && entry.idx.length ? '[' + entry.idx.join(',') + ']' : '[—]';
-    var srcText = match ? match.source : 'No verified source matched';
     var statusClass = entry.status === 'NORMAL' ? 'idx-status-ok' : 'idx-status-watch';
 
     box.style.display = 'block';
@@ -402,101 +361,25 @@ function bootDashboard() {
           '<span class="idx-status ' + statusClass + '">' + entry.status + '</span>' +
         '</div>' +
         '<div class="index-grid">' +
-          '<div class="idx-row"><span class="idx-key">Day</span><span class="idx-val">' + entry.day + ' · ' + entry.period + '</span></div>' +
-          '<div class="idx-row"><span class="idx-key">Source</span><span class="idx-val">SENSOR + SELF</span></div>' +
-          '<div class="idx-row"><span class="idx-key">Symptom</span><span class="idx-val">' + (entry.symptom || '—') + '</span></div>' +
+          '<div class="idx-row"><span class="idx-key">Day</span><span class="idx-val">' + entry.day + '</span></div>' +
+          '<div class="idx-row"><span class="idx-key">Metric</span><span class="idx-val">' + entry.metric + '</span></div>' +
+          '<div class="idx-row"><span class="idx-key">Delta</span><span class="idx-val">' + entry.delta + '</span></div>' +
+          '<div class="idx-row"><span class="idx-key">Period</span><span class="idx-val">' + entry.period + '</span></div>' +
+          '<div class="idx-row"><span class="idx-key">Status</span><span class="idx-val">' + entry.status + '</span></div>' +
           '<div class="idx-row"><span class="idx-key">Index</span><span class="idx-val idx-mono">' + idxText + '</span></div>' +
-          '<div class="idx-row"><span class="idx-key">Matched</span><span class="idx-val">' + srcText + '</span></div>' +
-          '<div class="idx-row"><span class="idx-key">Stored</span><span class="idx-val idx-mono">' + new Date(entry.createdAt).toLocaleString() + '</span></div>' +
         '</div>' +
         '<div class="index-line-wrap">' +
           '<div class="idx-line-label">Compact index line — synced on next window</div>' +
           '<div class="idx-line">' + entry.line + '</div>' +
         '</div>' +
-        '<div class="index-loc"><span class="idx-pin">🔒</span> Locked · saved to <code>aethersync_records_' + crewId + '</code> · cannot be edited</div>' +
+        '<div class="index-loc"><span class="idx-pin">🔒</span> Locked · saved to <code>aethersync_records_' + crewId + '</code></div>' +
       '</div>';
   }
 
-  /* ---------- Test suggestion ---------- */
-  function renderTestSuggestion(testText) {
-    var box = document.getElementById('testSuggestBox');
-    if (!box) return;
-    box.style.display = 'block';
-    box.innerHTML =
-      '<div class="test-suggest">' +
-        '<div class="ts-head">🧪 Test Recommended</div>' +
-        '<div class="ts-body">' + testText + '</div>' +
-        '<div class="ts-hint">Please upload the test result (PDF or CSV) in the panel below when ready.</div>' +
-      '</div>';
-    var uh = document.getElementById('uploadHint');
-    if (uh) uh.textContent = testText;
-  }
-
-  /* ---------- File upload ---------- */
-  var uploadBtn = document.getElementById('uploadBtn');
-  if (uploadBtn) {
-    uploadBtn.addEventListener('click', function () {
-      var fileInput = document.getElementById('testFile');
-      var status = document.getElementById('uploadStatus');
-      if (!fileInput || !fileInput.files || !fileInput.files.length) {
-        if (status) {
-          status.style.color = 'var(--red)';
-          status.textContent = 'Please choose a file first.';
-        }
-        return;
-      }
-      var file = fileInput.files[0];
-      var reader = new FileReader();
-      reader.onload = function (e) {
-        var record = {
-          name: file.name,
-          type: file.type || (file.name.endsWith('.csv') ? 'text/csv' : 'application/pdf'),
-          size: file.size,
-          uploadedAt: new Date().toISOString(),
-          dataHead: String(e.target.result).slice(0, 200)
-        };
-        AS.saveTestUpload(crewId, record);
-        if (status) {
-          status.style.color = 'var(--green)';
-          status.textContent = '✓ Uploaded: ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
-        }
-        var fs = document.getElementById('flowStep');
-        if (fs) fs.textContent = 'step 4 of 4 — complete';
-      };
-      reader.readAsText(file);
-    });
-  }
-
-  /* ---------- Status hero ---------- */
-  function updateStatusHero(selfStatus, match) {
-    var title = document.getElementById('statusTitle');
-    var desc = document.getElementById('statusDesc');
-    var action = document.getElementById('statusAction');
-    var dot = document.getElementById('statusDot');
-
-    if (selfStatus === 'normal') {
-      if (title) title.textContent = 'Normal — within personal baseline';
-      if (desc) desc.textContent = 'All vitals within range. No action required.';
-      if (action) action.textContent = 'Continue routine monitoring.';
-      if (dot) dot.style.background = 'var(--green)';
-    } else if (match) {
-      if (title) title.textContent = 'Attention — matched to knowledge base';
-      if (desc) desc.textContent = 'AI found guidance for your reported symptom.';
-      if (action) action.textContent = match.recommend || 'Follow guidance, monitor for 2 days.';
-      if (dot) dot.style.background = 'var(--yellow)';
-    } else {
-      if (title) title.textContent = 'Watch — no verified match yet';
-      if (desc) desc.textContent = 'AetherSync has logged this for ground review.';
-      if (action) action.textContent = 'Keep monitoring. Flag if it persists.';
-      if (dot) dot.style.background = 'var(--red)';
-    }
-  }
-
-  /* ---------- Recent check-ins ---------- */
+  /* Recent check-ins */
   function renderRecentCheckIns() {
     var list = AS.getRecords(crewId);
     var box = document.getElementById('recentList');
-    if (!box) return;
     if (!list || list.length === 0) {
       box.innerHTML = '<div style="color:var(--ink-faint); font-size:12px;">No check-ins yet.</div>';
       return;
@@ -505,95 +388,135 @@ function bootDashboard() {
     for (var i = 0; i < Math.min(list.length, 5); i++) {
       var e = list[i];
       var statusCls = e.status === 'NORMAL' ? 'flat' : 'up';
-      var idxText = e.idx && e.idx.length ? 'index [' + e.idx.join(',') + ']' : 'NOT_FOUND';
       html +=
         '<div class="recent-row">' +
           '<div class="recent-line"><b>Day ' + e.day + ' · ' + (e.symptom || 'Check-in') + '</b> ' +
           '<span class="vital-delta ' + statusCls + '">' + e.status + '</span></div>' +
-          '<div class="recent-sub">' + new Date(e.createdAt).toLocaleString() + ' · ' + idxText + '</div>' +
+          '<div class="recent-sub">' + new Date(e.createdAt).toLocaleString() + ' · ' + e.line + '</div>' +
         '</div>';
     }
     box.innerHTML = html;
   }
   renderRecentCheckIns();
 
-  /* ---------- MIND GAMES ---------- */
-  var numGameState = {
-    started: 0, elapsed: 0, finished: false, target: 0, timerId: null, mistakes: 0
-  };
+  /* Status hero */
+  function updateStatusHero(selfStatus, match) {
+    var title = document.getElementById('statusTitle');
+    var desc = document.getElementById('statusDesc');
+    var action = document.getElementById('statusAction');
+    var dot = document.getElementById('statusDot');
+
+    if (selfStatus === 'normal') {
+      title.textContent = 'Normal — within personal baseline';
+      desc.textContent = 'All vitals within range. No action required.';
+      action.textContent = 'Continue routine monitoring.';
+      dot.style.background = 'var(--green)';
+    } else if (match) {
+      title.textContent = 'Attention — matched to knowledge base';
+      desc.textContent = 'AI found guidance for your reported symptom.';
+      action.textContent = match.recommend || 'Follow guidance, monitor for 2 days.';
+      dot.style.background = 'var(--yellow)';
+    } else {
+      title.textContent = 'Watch — no verified match yet';
+      desc.textContent = 'AetherSync has logged this for ground review.';
+      action.textContent = 'Keep monitoring. Flag if it persists.';
+      dot.style.background = 'var(--red)';
+    }
+  }
+
+  /* Upload */
+  document.getElementById('uploadBtn').addEventListener('click', function () {
+    var fileInput = document.getElementById('testFile');
+    var status = document.getElementById('uploadStatus');
+    if (!fileInput.files.length) {
+      status.style.color = 'var(--red)';
+      status.textContent = 'Please choose a file first.';
+      return;
+    }
+    var file = fileInput.files[0];
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      AS.saveTestUpload(crewId, {
+        name: file.name,
+        type: file.type || 'application/pdf',
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
+        dataHead: String(e.target.result).slice(0, 200)
+      });
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Uploaded: ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+      document.getElementById('flowStep').textContent = 'step 4 of 4 — complete';
+    };
+    reader.readAsText(file);
+  });
+
+  /* ============================================================
+     MIND GAMES
+     ============================================================ */
+  var numGameState = { started:0, elapsed:0, finished:false, target:0, timerId:null, mistakes:0 };
 
   function initMindGames() {
     /* Puzzle */
-    try {
-      var puzzles = AS.getPuzzles();
-      var puzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
-      var pqEl = document.getElementById('puzzleQ');
-      if (pqEl) pqEl.textContent = puzzle.q;
+    var puzzles = AS.getPuzzles();
+    var puzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+    document.getElementById('puzzleQ').textContent = puzzle.q;
 
-      var optsBox = document.getElementById('puzzleOpts');
-      if (optsBox) {
-        optsBox.innerHTML = '';
-        puzzle.opts.forEach(function (o, i) {
-          var el = document.createElement('div');
-          el.className = 'puzzle-opt';
-          el.textContent = o;
-          el.addEventListener('click', function () {
-            var all = optsBox.querySelectorAll('.puzzle-opt');
-            for (var j = 0; j < all.length; j++) all[j].classList.remove('selected');
-            el.classList.add('selected');
-            el.setAttribute('data-correct', i === puzzle.ans ? 'yes' : 'no');
-          });
-          optsBox.appendChild(el);
+    var optsBox = document.getElementById('puzzleOpts');
+    optsBox.innerHTML = '';
+    for (var i = 0; i < puzzle.opts.length; i++) {
+      (function (idx) {
+        var el = document.createElement('div');
+        el.className = 'puzzle-opt';
+        el.textContent = puzzle.opts[idx];
+        el.addEventListener('click', function () {
+          var all = optsBox.querySelectorAll('.puzzle-opt');
+          for (var j = 0; j < all.length; j++) all[j].classList.remove('selected');
+          el.classList.add('selected');
+          el.setAttribute('data-correct', idx === puzzle.ans ? 'yes' : 'no');
         });
-      }
-    } catch (e) { console.error('[AetherSync] Puzzle error:', e); }
+        optsBox.appendChild(el);
+      })(i);
+    }
 
-    /* Voiceover */
+    /* Voice */
     var recordBtn = document.getElementById('recordBtn');
     var recordStatus = document.getElementById('recordStatus');
-    if (recordBtn && recordStatus) {
-      var recording = false;
-      recordBtn.addEventListener('click', function () {
-        if (!recording) {
-          recording = true;
-          recordBtn.textContent = '⏹ Stop Recording';
-          recordStatus.textContent = 'recording… (say the sentence aloud)';
-          recordStatus.style.color = 'var(--red)';
-          setTimeout(function () {
-            if (recording) {
-              recordStatus.textContent = '✓ scored (clarity: 87 / 100)';
-              recordStatus.style.color = 'var(--green)';
-              recording = false;
-              recordBtn.textContent = '🎤 Re-record';
-              AS.saveGameScore(crewId, 'voiceClarity', 87);
-            }
-          }, 4000);
-        } else {
-          recording = false;
-          recordBtn.textContent = '🎤 Start Recording';
-          recordStatus.textContent = 'stopped';
-          recordStatus.style.color = 'var(--ink-dim)';
-        }
-      });
-    }
+    var recording = false;
+    recordBtn.addEventListener('click', function () {
+      if (!recording) {
+        recording = true;
+        recordBtn.textContent = '⏹ Stop Recording';
+        recordStatus.textContent = 'recording…';
+        recordStatus.style.color = 'var(--red)';
+        setTimeout(function () {
+          if (recording) {
+            recordStatus.textContent = '✓ scored (clarity: 87 / 100)';
+            recordStatus.style.color = 'var(--green)';
+            recording = false;
+            recordBtn.textContent = '🎤 Re-record';
+            AS.saveGameScore(crewId, 'voiceClarity', 87);
+          }
+        }, 4000);
+      } else {
+        recording = false;
+        recordBtn.textContent = '🎤 Start Recording';
+        recordStatus.textContent = 'stopped';
+      }
+    });
 
-    /* Find-the-Number */
     initNumberGame();
 
-    var restartBtn = document.getElementById('restartNumGame');
-    if (restartBtn) {
-      restartBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        initNumberGame();
-      });
-    }
+    document.getElementById('restartNumGame').addEventListener('click', function (e) {
+      e.preventDefault();
+      initNumberGame();
+    });
   }
 
   function initNumberGame() {
     var grid = document.getElementById('numgameGrid');
     var targetEl = document.getElementById('numgameTarget');
     var status = document.getElementById('numgameStatus');
-    if (!grid || !targetEl || !status) return;
+    if (!grid) return;
 
     if (numGameState.timerId) clearInterval(numGameState.timerId);
     numGameState.finished = false;
@@ -616,42 +539,44 @@ function bootDashboard() {
     targetEl.textContent = 'Find: ' + target;
     grid.innerHTML = '';
 
-    cells.forEach(function (n) {
-      var el = document.createElement('div');
-      el.className = 'numgame-cell';
-      el.textContent = n;
-      el.addEventListener('click', function () {
-        if (numGameState.finished) return;
-        if (!numGameState.started) {
-          numGameState.started = Date.now();
-          numGameState.timerId = setInterval(function () {
-            numGameState.elapsed = (Date.now() - numGameState.started) / 1000;
-            var t = status.querySelector('.ng-timer');
-            if (t) t.textContent = '⏱ ' + numGameState.elapsed.toFixed(1) + 's';
-          }, 100);
-        }
-        if (n === target) {
-          numGameState.finished = true;
-          clearInterval(numGameState.timerId);
-          numGameState.elapsed = (Date.now() - numGameState.started) / 1000;
-          el.classList.add('found');
-          var f = status.querySelector('.ng-found');
-          if (f) {
-            f.textContent = '✓ Found in ' + numGameState.elapsed.toFixed(2) + 's · ' +
-              numGameState.mistakes + ' miss' + (numGameState.mistakes === 1 ? '' : 'es');
-            f.style.color = 'var(--green)';
+    for (var j = 0; j < cells.length; j++) {
+      (function (n) {
+        var el = document.createElement('div');
+        el.className = 'numgame-cell';
+        el.textContent = n;
+        el.addEventListener('click', function () {
+          if (numGameState.finished) return;
+          if (!numGameState.started) {
+            numGameState.started = Date.now();
+            numGameState.timerId = setInterval(function () {
+              numGameState.elapsed = (Date.now() - numGameState.started) / 1000;
+              var t = status.querySelector('.ng-timer');
+              if (t) t.textContent = '⏱ ' + numGameState.elapsed.toFixed(1) + 's';
+            }, 100);
           }
-          var speedScore = Math.max(20, 100 - numGameState.elapsed * 8);
-          var finalScore = Math.max(15, Math.round(speedScore - numGameState.mistakes * 6));
-          AS.saveGameScore(crewId, 'numberScan', finalScore);
-        } else {
-          numGameState.mistakes++;
-          el.classList.add('miss');
-          setTimeout(function () { el.classList.remove('miss'); }, 400);
-        }
-      });
-      grid.appendChild(el);
-    });
+          if (n === target) {
+            numGameState.finished = true;
+            clearInterval(numGameState.timerId);
+            numGameState.elapsed = (Date.now() - numGameState.started) / 1000;
+            el.classList.add('found');
+            var f = status.querySelector('.ng-found');
+            if (f) {
+              f.textContent = '✓ Found in ' + numGameState.elapsed.toFixed(2) + 's · ' +
+                numGameState.mistakes + ' misses';
+              f.style.color = 'var(--green)';
+            }
+            var speedScore = Math.max(20, 100 - numGameState.elapsed * 8);
+            var finalScore = Math.max(15, Math.round(speedScore - numGameState.mistakes * 6));
+            AS.saveGameScore(crewId, 'numberScan', finalScore);
+          } else {
+            numGameState.mistakes++;
+            el.classList.add('miss');
+            setTimeout(function () { el.classList.remove('miss'); }, 400);
+          }
+        });
+        grid.appendChild(el);
+      })(cells[j]);
+    }
 
     var t2 = status.querySelector('.ng-timer');
     var f2 = status.querySelector('.ng-found');
@@ -659,134 +584,74 @@ function bootDashboard() {
     if (f2) { f2.textContent = '— not found yet'; f2.style.color = ''; }
   }
 
-  /* ---------- Submit games ---------- */
-  var submitGamesBtn = document.getElementById('submitGamesBtn');
-  if (submitGamesBtn) {
-    submitGamesBtn.addEventListener('click', function () {
-      var sel = document.querySelector('#puzzleOpts .puzzle-opt.selected');
-      var result = document.getElementById('gamesResult');
-      var puzzleCorrect = sel && sel.getAttribute('data-correct') === 'yes';
-      var voice = AS.getGameScore(crewId, 'voiceClarity') || 0;
-      var numberScan = AS.getGameScore(crewId, 'numberScan') || 0;
-      var puzzleScore = puzzleCorrect ? 100 : 30;
-      var cognitive = Math.round((voice + puzzleScore + numberScan) / 3);
-      var rawStress = 100 - cognitive;
-      var stress = Math.max(10, Math.min(95, rawStress + Math.floor(Math.random() * 12 - 6)));
-      var depression = Math.max(5, Math.min(95,
-        Math.round((stress * 0.6) + (100 - numberScan) * 0.4)));
+  document.getElementById('submitGamesBtn').addEventListener('click', function () {
+    var sel = document.querySelector('#puzzleOpts .puzzle-opt.selected');
+    var puzzleCorrect = sel && sel.getAttribute('data-correct') === 'yes';
+    var voice = AS.getGameScore(crewId, 'voiceClarity') || 0;
+    var numberScan = AS.getGameScore(crewId, 'numberScan') || 0;
+    var puzzleScore = puzzleCorrect ? 100 : 30;
+    var cognitive = Math.round((voice + puzzleScore + numberScan) / 3);
+    var stress = Math.max(10, Math.min(95, 100 - cognitive + Math.floor(Math.random() * 12 - 6)));
+    var depression = Math.max(5, Math.min(95, Math.round(stress * 0.6 + (100 - numberScan) * 0.4)));
 
-      AS.saveGameResult(crewId, {
-        voiceClarity: voice, puzzleCorrect: puzzleCorrect, numberScan: numberScan,
-        cognitiveScore: cognitive, stressScore: stress, depressionScore: depression,
-        createdAt: new Date().toISOString()
-      });
-
-      var mood = cognitive >= 80 ? 'stable' : cognitive >= 60 ? 'mild variation' : 'notable variation';
-      var depressionLabel = depression <= 30 ? 'low' : depression <= 60 ? 'moderate' : 'elevated';
-
-      if (result) {
-        result.innerHTML =
-          '<div class="games-result-card">' +
-            '<div class="gr-row"><span>Cognitive Score</span><b>' + cognitive + ' / 100</b></div>' +
-            '<div class="gr-row"><span>Stress Index</span><b>' + stress + ' / 100</b></div>' +
-            '<div class="gr-row"><span>Depression Indicator</span><b>' + depression + ' / 100 · ' + depressionLabel + '</b></div>' +
-            '<div class="gr-row"><span>Mood</span><b>' + mood + '</b></div>' +
-            '<div class="gr-note">Result saved. Re-assessment scheduled in 5 days.</div>' +
-          '</div>';
-      }
+    AS.saveGameResult(crewId, {
+      voiceClarity: voice, puzzleCorrect: puzzleCorrect, numberScan: numberScan,
+      cognitiveScore: cognitive, stressScore: stress, depressionScore: depression,
+      createdAt: new Date().toISOString()
     });
-  }
 
-  /* ---------- PDF download ---------- */
-  var dlBtn = document.getElementById('downloadReportBtn');
-  if (dlBtn) {
-    dlBtn.addEventListener('click', function () {
-      try {
-        var html = AS.buildReportHTML(crewId);
-        var w = window.open('', '_blank');
-        w.document.write(html);
-        w.document.close();
-        setTimeout(function () { w.print(); }, 500);
-      } catch (e) {
-        console.error('[AetherSync] Report error:', e);
-        alert('Report could not be generated: ' + e.message);
-      }
-    });
-  }
+    var mood = cognitive >= 80 ? 'stable' : cognitive >= 60 ? 'mild variation' : 'notable variation';
+    var dLabel = depression <= 30 ? 'low' : depression <= 60 ? 'moderate' : 'elevated';
 
-  /* ---------- HRV More modal ---------- */
-  var moreOverlay = document.getElementById('moreOverlay');
+    document.getElementById('gamesResult').innerHTML =
+      '<div class="games-result-card">' +
+        '<div class="gr-row"><span>Cognitive Score</span><b>' + cognitive + ' / 100</b></div>' +
+        '<div class="gr-row"><span>Stress Index</span><b>' + stress + ' / 100</b></div>' +
+        '<div class="gr-row"><span>Depression Indicator</span><b>' + depression + ' / 100 · ' + dLabel + '</b></div>' +
+        '<div class="gr-row"><span>Mood</span><b>' + mood + '</b></div>' +
+        '<div class="gr-note">Result saved. Next assessment in 5 days.</div>' +
+      '</div>';
+  });
+
+  /* PDF */
+  document.getElementById('downloadReportBtn').addEventListener('click', function () {
+    var html = AS.buildReportHTML(crewId);
+    var w = window.open('', '_blank');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(function () { w.print(); }, 500);
+  });
+
+  /* HRV Modal */
   var moreSel = null;
-
-  var openMoreBtn = document.getElementById('openMore');
-  if (openMoreBtn && moreOverlay) {
-    openMoreBtn.addEventListener('click', function () {
-      moreOverlay.classList.add('show');
-    });
-  }
-
-  var moreClose = document.getElementById('moreClose');
-  if (moreClose) {
-    moreClose.addEventListener('click', function () {
-      moreOverlay.classList.remove('show');
-      var g = document.getElementById('moreGuideline');
-      if (g) { g.style.display = 'none'; g.innerHTML = ''; }
-      var mn = document.getElementById('moreNote');
-      if (mn) mn.value = '';
-      moreSel = null;
-      var mN = document.getElementById('moreNormal');
-      var mA = document.getElementById('moreAbn');
-      if (mN) mN.classList.remove('active-normal');
-      if (mA) mA.classList.remove('active-abn');
-    });
-  }
-
-  var moreNormalBtn = document.getElementById('moreNormal');
-  if (moreNormalBtn) {
-    moreNormalBtn.addEventListener('click', function () {
-      moreSel = 'normal';
-      this.classList.add('active-normal');
-      var mA = document.getElementById('moreAbn');
-      if (mA) mA.classList.remove('active-abn');
-    });
-  }
-
-  var moreAbnBtn = document.getElementById('moreAbn');
-  if (moreAbnBtn) {
-    moreAbnBtn.addEventListener('click', function () {
-      moreSel = 'abnormal';
-      this.classList.add('active-abn');
-      var mN = document.getElementById('moreNormal');
-      if (mN) mN.classList.remove('active-normal');
-    });
-  }
-
-  var moreAskBtn = document.getElementById('moreAskBtn');
-  if (moreAskBtn) {
-    moreAskBtn.addEventListener('click', function () {
-      var box = document.getElementById('moreGuideline');
-      if (!box) return;
-      var note = (document.getElementById('moreNote').value || '').trim();
-
-      if (moreSel === 'normal') {
-        box.style.display = 'block';
-        box.innerHTML = '<div class="gline">Logged as normal for you. AetherSync will fold this into your adaptive baseline instead of flagging it again.</div>';
-        return;
-      }
-
-      var hit = note ? AS.findAnswer(note) : null;
-      box.style.display = 'block';
-      if (hit) {
-        box.innerHTML =
-          '<div class="gline">' + hit.answer + '</div>' +
-          '<div class="gsrc">' + hit.source + '</div>';
-      } else {
-        box.innerHTML =
-          '<div class="gline">This isn\'t matched to a verified entry. It has been logged for ground review.</div>' +
-          '<div class="gsrc">NOT_FOUND · no source cited</div>';
-      }
-    });
-  }
+  document.getElementById('moreNormal').addEventListener('click', function () {
+    moreSel = 'normal';
+    this.classList.add('active-normal');
+    document.getElementById('moreAbn').classList.remove('active-abn');
+  });
+  document.getElementById('moreAbn').addEventListener('click', function () {
+    moreSel = 'abnormal';
+    this.classList.add('active-abn');
+    document.getElementById('moreNormal').classList.remove('active-normal');
+  });
+  document.getElementById('moreClose').addEventListener('click', function () {
+    document.getElementById('moreOverlay').classList.remove('show');
+  });
+  document.getElementById('moreAskBtn').addEventListener('click', function () {
+    var box = document.getElementById('moreGuideline');
+    box.style.display = 'block';
+    if (moreSel === 'normal') {
+      box.innerHTML = '<div class="gline">Logged as normal. AetherSync will fold this in.</div>';
+      return;
+    }
+    var note = document.getElementById('moreNote').value.trim();
+    var hit = note ? AS.findAnswer(note) : null;
+    if (hit) {
+      box.innerHTML = '<div class="gline">' + hit.answer + '</div><div class="gsrc">' + hit.source + '</div>';
+    } else {
+      box.innerHTML = '<div class="gline">Not matched. Logged for review.</div><div class="gsrc">NOT_FOUND</div>';
+    }
+  });
 
   console.log('[AetherSync] Dashboard ready ✅');
 }
