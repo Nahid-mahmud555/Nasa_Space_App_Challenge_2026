@@ -14,6 +14,7 @@
 <div class="ob-shell">
   <div class="ob-card">
 
+    <!-- Progress dots -->
     <div class="ob-progress" id="obProgress">
       <span class="ob-dot active" data-step="1"></span>
       <span class="ob-dot" data-step="2"></span>
@@ -21,7 +22,7 @@
       <span class="ob-dot" data-step="4"></span>
     </div>
 
-    <!-- STEP 1 -->
+    <!-- ============ STEP 1: INTRO + CONNECT ============ -->
     <div class="ob-step" id="obStep1">
       <div class="ob-mark">AS</div>
       <div class="ob-title">Welcome aboard, <span id="crewName">crew</span>.</div>
@@ -48,7 +49,7 @@
       </div>
     </div>
 
-    <!-- STEP 2 -->
+    <!-- ============ STEP 2: PAIRING + STREAMING ============ -->
     <div class="ob-step" id="obStep2" style="display:none;">
       <div class="ob-connecting">
         <div class="pulse-ring"></div>
@@ -65,7 +66,7 @@
       <div class="stream-status" id="streamStatus"></div>
     </div>
 
-    <!-- STEP 3 -->
+    <!-- ============ STEP 3: AM/PM ============ -->
     <div class="ob-step" id="obStep3" style="display:none;">
       <div class="ob-mark small">✓</div>
       <div class="ob-title">Readings received.</div>
@@ -87,7 +88,7 @@
       <button class="btn" id="saveBaselineBtn" disabled>Save Baseline &amp; Continue</button>
     </div>
 
-    <!-- STEP 4 -->
+    <!-- ============ STEP 4: SUCCESS ============ -->
     <div class="ob-step" id="obStep4" style="display:none;">
       <div class="ob-success-mark">✓</div>
       <div class="ob-title">Baseline recorded.</div>
@@ -102,6 +103,7 @@
   </div>
 </div>
 
+<!-- ============ PERMISSION OVERLAY ============ -->
 <div class="permission-overlay" id="permOverlay">
   <div class="permission-box">
     <div class="pt" id="permTitle">aethersync.app wants to connect</div>
@@ -115,13 +117,20 @@
 
 <script src="assets/app.js"></script>
 <script>
+/* ============================================================
+   LAYER 2 — Baseline sensor onboarding
+   Steps: 1 connect → 2 stream → 3 AM/PM → 4 saved → dashboard
+   ============================================================ */
+
 console.log('[AetherSync] Baseline page loaded');
 
 var crewId = AS.currentCrewId();
 if (!crewId) {
+  console.warn('[AetherSync] Not logged in → index.html');
   window.location.href = 'index.html';
 } else {
   document.getElementById('crewName').textContent = crewId;
+  console.log('[AetherSync] Crew:', crewId);
 }
 
 var pendingMethod = null;
@@ -129,6 +138,7 @@ var overlay = document.getElementById('permOverlay');
 var reading = null;
 var period = null;
 
+/* ---------- Step navigation ---------- */
 function showStep(n) {
   for (var i = 1; i <= 4; i++) {
     var el = document.getElementById('obStep' + i);
@@ -142,6 +152,7 @@ function showStep(n) {
   }
 }
 
+/* ---------- Ask permission ---------- */
 function askPermission(method) {
   console.log('[AetherSync] askPermission:', method);
   pendingMethod = method;
@@ -160,22 +171,23 @@ function askPermission(method) {
   overlay.classList.add('show');
 }
 
-/* Connect buttons */
+/* ---------- Connect buttons ---------- */
 var btnBt = document.getElementById('btnBluetooth');
 var btnUsb = document.getElementById('btnUsb');
 if (btnBt) btnBt.addEventListener('click', function () { askPermission('bluetooth'); });
 if (btnUsb) btnUsb.addEventListener('click', function () { askPermission('usb'); });
 
-/* Block */
+/* ---------- Block ---------- */
 var permBlock = document.getElementById('permBlock');
 if (permBlock) {
   permBlock.addEventListener('click', function () {
     overlay.classList.remove('show');
     pendingMethod = null;
+    console.log('[AetherSync] Permission blocked');
   });
 }
 
-/* Allow */
+/* ---------- Allow → stream readings ---------- */
 var permAllow = document.getElementById('permAllow');
 if (permAllow) {
   permAllow.addEventListener('click', function () {
@@ -197,11 +209,13 @@ if (permAllow) {
     readingList.innerHTML = '';
     streamStatus.textContent = '';
 
+    /* Phase 1: pairing */
     setTimeout(function () {
       step2Title.innerHTML = 'Receiving sensor data…';
       step2Sub.textContent = 'Streaming live vitals from your onboard health sensor. Hold steady.';
     }, 1200);
 
+    /* Phase 2: stream rows */
     setTimeout(function () {
       reading = AS.simulateReading();
       console.log('[AetherSync] Simulated reading:', reading);
@@ -235,7 +249,7 @@ if (permAllow) {
   });
 }
 
-/* Period selection */
+/* ---------- Period selection ---------- */
 function selectPeriod(p) {
   period = p;
   var amEl = document.getElementById('periodAM');
@@ -251,7 +265,7 @@ var periodPM = document.getElementById('periodPM');
 if (periodAM) periodAM.addEventListener('click', function () { selectPeriod('AM'); });
 if (periodPM) periodPM.addEventListener('click', function () { selectPeriod('PM'); });
 
-/* Save baseline */
+/* ---------- Save baseline ---------- */
 var saveBtn = document.getElementById('saveBaselineBtn');
 if (saveBtn) {
   saveBtn.addEventListener('click', function () {
@@ -259,6 +273,8 @@ if (saveBtn) {
       alert('Please complete the reading and select AM/PM.');
       return;
     }
+
+    console.log('[AetherSync] Saving baseline...');
 
     var data = {
       restingHR: reading.restingHR,
@@ -280,12 +296,14 @@ if (saveBtn) {
     }
 
     showStep(4);
+
     setTimeout(function () {
       window.location.href = 'dashboard.html';
     }, 2000);
   });
 }
 
+/* ---------- Kickoff ---------- */
 showStep(1);
 console.log('[AetherSync] Baseline page ready ✅');
 </script>
