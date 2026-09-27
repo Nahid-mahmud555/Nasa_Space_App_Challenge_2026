@@ -82,104 +82,87 @@ var AS = (function () {
      LAYER 3 — Built-in offline trusted knowledge base
      ============================================================ */
   var KB = [
-    {
-      idx: [43, 47],
-      keys: ["headache", "head ache", "migraine", "head hurts"],
-      answer: "Headaches during long-duration missions are often linked to fluid shift, dehydration, or short sleep. Given a recent sleep deviation, this is likely related rather than an isolated event.",
-      recommend: "Hydrate, rest in a dim cabin, and re-check in 4 hours.",
-      recommendTest: "Log a 24-hour hydration & sleep diary (CSV) so we can rule out sleep-linked triggers.",
-      source: "Index [43, 47] — Cardiovascular & Sleep guidance · confidence: moderate"
-    },
-    {
-      idx: [45],
-      keys: ["short of breath", "breathless", "spo2", "oxygen", "breathing", "can't breathe"],
-      answer: "Mild breathlessness can relate to SpO2 fluctuation or exertion in altered-gravity conditions. If current SpO2 is within range, this is most likely transient.",
-      recommend: "Pause activity, sit, and re-measure SpO₂ in 10 minutes.",
-      recommendTest: "Upload a SpO₂ log (CSV) covering the last 6 hours.",
-      source: "Index [45] — Oxygenation-related guidance · confidence: moderate"
-    },
-    {
-      idx: [43],
-      keys: ["heart rate", "palpitation", "racing heart", "hr high", "fast heart"],
-      answer: "Elevated heart rate without other symptoms is commonly linked to activity, stress response, or early-mission cardiovascular adaptation.",
-      recommend: "Rest 5 minutes and re-measure.",
-      recommendTest: "Upload a 24-hour HR log (CSV) if it recurs.",
-      source: "Index [43] — Cardiovascular-related guidance · confidence: moderate"
-    },
-    {
-      idx: [48],
-      keys: ["can't sleep", "cannot sleep", "insomnia", "not sleeping", "sleep", "tired", "low energy", "exhausted"],
-      answer: "Reduced sleep duration is common during high workload periods or light-cycle disruption. Consider adjusting pre-sleep routine and flag this in your next check-in if it persists beyond 3 days.",
-      recommend: "Adjust pre-sleep routine; flag if it persists beyond 3 days.",
-      recommendTest: "Upload a 3-day sleep diary (CSV).",
-      source: "Index [48] — Sleep & Circadian guidance · confidence: high"
-    },
-    {
-      idx: [52],
-      keys: ["stress", "anxious", "anxiety", "overwhelmed", "isolation", "lonely", "depressed", "sad"],
-      answer: "Isolation and confinement are known contributors to mood and stress changes on long-duration missions. Structured check-ins and communication with crew or ground support are recommended.",
-      recommend: "Schedule structured check-ins and crew/ground conversations.",
-      source: "Index [52] — Behavioral Health guidance · confidence: high"
-    },
-    {
-      idx: [46],
-      keys: ["nausea", "dizzy", "dizziness", "vertigo", "vomiting"],
-      answer: "Dizziness or nausea can relate to vestibular adaptation in altered gravity, especially early in a mission. Stay hydrated and avoid sudden movements; monitor for recurrence.",
-      recommend: "Stay hydrated, avoid sudden movements, monitor recurrence.",
-      source: "Index [46] — Neuro-Vestibular guidance · confidence: moderate"
-    },
-    {
-      idx: [49],
-      keys: ["bone", "joint pain", "joint", "muscle pain", "muscle", "back pain", "backache"],
-      answer: "Musculoskeletal discomfort can relate to bone/muscle density changes under reduced load. Continue prescribed resistance exercise; this will be cross-checked at the next periodic scan.",
-      recommend: "Continue prescribed resistance exercise.",
-      recommendTest: "Upload latest DEXA scan result (PDF).",
-      source: "Index [49] — Musculoskeletal guidance · confidence: moderate"
-    },
-    {
-      idx: [45, 43],
-      keys: ["radiation", "radiation exposure", "rad dose"],
-      answer: "Current radiation dose is within the expected range for this mission phase. No associated health action is indicated at this time.",
-      recommend: "No action indicated at this time.",
-      source: "Index [43, 45] — Radiation & Cardiovascular cross-reference · confidence: high"
-    },
-    {
-      idx: [47],
-      keys: ["fever", "chills", "temperature", "hot", "cold", "flu"],
-      answer: "Fever or chills in a closed habitat can indicate an immune response or environmental factor. Hydrate, rest, and re-check temperature in 4 hours. If it persists, this will be escalated to ground medical review.",
-      recommend: "Hydrate, rest, re-check temperature in 4 hours.",
-      recommendTest: "Upload a body-temperature log (CSV) covering the last 12 hours.",
-      source: "Index [47] — Immune & Environmental guidance · confidence: moderate"
-    },
-    {
-      idx: [51],
-      keys: ["cough", "sore throat", "throat", "cold", "runny nose", "congestion"],
-      answer: "Upper-respiratory symptoms in a closed habitat are usually self-limiting. Hydrate, rest, monitor temperature, and avoid close contact with other crew until symptoms subside.",
-      recommend: "Hydrate, rest, monitor temperature, limit close contact.",
-      source: "Index [51] — Respiratory guidance · confidence: moderate"
-    },
-    {
-      idx: [50],
-      keys: ["eye", "eye pain", "vision", "blurry", "blurred vision"],
-      answer: "Visual changes in microgravity are common — often related to fluid shifts affecting the eye. If vision is persistently blurred, log it for the next periodic scan.",
-      recommend: "Note the change, avoid eye strain, flag at next check-in.",
-      source: "Index [50] — Ocular guidance · confidence: moderate"
-    },
-    {
-      idx: [53],
-      keys: ["stomach", "stomach pain", "abdominal", "belly", "digestive", "constipation", "diarrhea"],
-      answer: "Gastrointestinal discomfort can relate to dietary shifts or adaptation to a closed environment. Hydrate and monitor for recurrence or persistence.",
-      recommend: "Hydrate, note dietary changes, monitor for 24 hours.",
-      source: "Index [53] — Gastrointestinal guidance · confidence: moderate"
-    },
-    {
-      idx: [54],
-      keys: ["chest pain", "chest", "heart pain"],
-      answer: "Chest pain requires careful evaluation — log this immediately. AetherSync will escalate it to ground medical on the next sync window regardless of the reading.",
-      recommend: "Stop activity, sit calmly, log immediately, await ground review.",
-      source: "Index [54] — Cardiovascular urgent flag · confidence: high"
-    }
-  ];
+  {
+    "idx": [3.4],
+    "keys": ["nutrition", "diet", "macronutrients", "micronutrients", "food intake"],
+    "answer": "Optimization of nutrition intake—to include caloric density, macro/micronutrients (antioxidants, omega-3, etc.), and food variety—is required to support immune function, bone and muscle health, and psychological well-being[cite: 3].",
+    "recommend": "Monitor daily caloric intake, ensure diverse nutrient variety, and log dietary components.",
+    "recommendTest": "Run a nutrition and micro-nutrient balance log (JSON/CSV).",
+    "source": "Index [3.4] — In-Mission Preventive Health Care"
+  },
+  {
+    "idx": [3.4],
+    "keys": ["sleep", "circadian rhythm", "rest", "work/rest schedule"],
+    "answer": "Maintenance and monitoring of work/rest schedules and optimal sleep/circadian rhythm are crucial in-mission preventive measures to maintain crew health and performance[cite: 3].",
+    "recommend": "Maintain strict sleep hygiene, keep consistent sleep-wake cycles, and optimize cabin lighting.",
+    "recommendTest": "Log a 24-hour sleep and circadian rhythm tracker.",
+    "source": "Index [3.4] — In-Mission Preventive Health Care"
+  },
+  {
+    "idx": [3.4],
+    "keys": ["aerobic fitness", "strength fitness", "exercise", "physical fitness", "muscle strength"],
+    "answer": "Maintenance and periodic monitoring of aerobic and strength physical fitness are required to support muscle strength, aerobic capacity, bone strength, and cardiovascular health[cite: 3].",
+    "recommend": "Perform scheduled resistance and aerobic training protocols daily.",
+    "recommendTest": "Complete weekly fitness capacity and strength output metrics assessment.",
+    "source": "Index [3.4] — In-Mission Preventive Health Care"
+  },
+  {
+    "idx": [3.4],
+    "keys": ["vitamin d", "supplementation", "bone health", "immune function"],
+    "answer": "Vitamin D supplementation is implemented pre-mission and in-mission to support optimal bone and immune function[cite: 3].",
+    "recommend": "Review supplement schedules and maintain recommended daily intake levels.",
+    "recommendTest": "Periodic 25-hydroxyvitamin D blood serum lab assay.",
+    "source": "Index [3.3, 3.4] — Preventive Health Care"
+  },
+  {
+    "idx": [3.4, 3.5],
+    "keys": ["behavioral health", "stress", "psychosocial", "isolation", "mental well-being"],
+    "answer": "Psychosocial countermeasures, private communications, and behavioral monitoring are used to address social isolation, team cohesion, and sensory deprivation during long missions[cite: 3].",
+    "recommend": "Utilize private family/psychological conferences and engage in scheduled crew relaxation activities.",
+    "recommendTest": "Conduct periodic behavioral health stress and mood self-assessment logs.",
+    "source": "Index [3.4, 3.5] — In-Mission Health Care & Behavioral Support"
+  },
+  {
+    "idx": [3.4],
+    "keys": ["sans", "vision", "eyes", "ocular", "neuro-ocular syndrome"],
+    "answer": "Spaceflight Associated Neuro-Ocular Syndrome (SANS) requires periodic monitoring and prevention using designated technical countermeasures[cite: 3].",
+    "recommend": "Perform baseline optical coherence tomography and monitor visual acuity changes.",
+    "recommendTest": "Log optical coherence tomography (OCT) and refraction error tracking.",
+    "source": "Index [3.4] — In-Mission Preventive Health Care"
+  },
+  {
+    "idx": [3.5],
+    "keys": ["vital signs", "physiological signs", "monitoring", "heart rate", "vitals"],
+    "answer": "Assessing, recording, monitoring, and trending vital signs and additional physiological/behavioral health indicators are core components of in-mission medical care capabilities[cite: 3].",
+    "recommend": "Initiate real-time telemetry tracking and re-evaluate baseline metrics.",
+    "recommendTest": "Execute continuous multi-signal physiological telemetry stream check.",
+    "source": "Index [3.5] — In-Mission Medical Care"
+  },
+  {
+    "idx": [3.5],
+    "keys": ["dental", "teeth", "dental health", "toothache"],
+    "answer": "Periodic monitoring and treatment of dental health, along with preventive care, are provisioned to handle in-mission dental contingencies[cite: 3].",
+    "recommend": "Maintain regular oral hygiene routines and use onboard dental first-aid kits if minor irritation occurs.",
+    "recommendTest": "Perform a digital dental cavity and tissue assessment scan.",
+    "source": "Index [3.3, 3.4, 3.5] — Dental Care Provisions"
+  },
+  {
+    "idx": [3.4],
+    "keys": ["radiation", "total dose", "radiation exposure", "dose control"],
+    "answer": "Total radiation dose control and monitoring are actively enforced pre-mission and in-mission to protect cellular structures and DNA repair mechanisms[cite: 3].",
+    "recommend": "Limit extravehicular time during high-radiation solar events and track personal dosimeter readings.",
+    "recommendTest": "Analyze active personal radiation dosimeter cumulative data files.",
+    "source": "Index [3.3, 3.4] — Preventive Health Care"
+  },
+  {
+    "idx": [3.5],
+    "keys": ["medication", "pharmaceuticals", "drugs", "medical kits", "treatment plans"],
+    "answer": "In-mission medical kits contain carefully selected pharmaceuticals, equipment, and supplies optimized for ease-of-use, storage limits, and expiration tracking under spaceflight constraints[cite: 3].",
+    "recommend": "Verify medication packaging integrity, expiration dates, and consult clinical guidance before administration.",
+    "recommendTest": "Run automated medical inventory and stowage database scan.",
+    "source": "Index [3.5] — In-Mission Medical Care"
+  }
+];
 
   function findAnswer(text) {
     if (!text) return null;
