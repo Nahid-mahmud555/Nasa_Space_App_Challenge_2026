@@ -84,82 +84,82 @@ var AS = (function () {
   var KB = [
   {
     "idx": [3.4],
-    "keys": ["nutrition", "diet", "macronutrients", "micronutrients", "food intake"],
-    "answer": "Optimization of nutrition intake—to include caloric density, macro/micronutrients (antioxidants, omega-3, etc.), and food variety—is required to support immune function, bone and muscle health, and psychological well-being[cite: 3].",
-    "recommend": "Monitor daily caloric intake, ensure diverse nutrient variety, and log dietary components.",
-    "recommendTest": "Run a nutrition and micro-nutrient balance log (JSON/CSV).",
+    "keys": ["feeling normal", "general health", "routine check", "baseline normal"],
+    "answer": "Periodic monitoring of general health status is maintained throughout the mission to ensure stability[cite: 5].",
+    "recommend": "Continue regular daily routines and log standard telemetry checks.",
+    "recommendTest": "Record standard daily health check-in log (CSV).",
     "source": "Index [3.4] — In-Mission Preventive Health Care"
   },
   {
     "idx": [3.4],
-    "keys": ["sleep", "circadian rhythm", "rest", "work/rest schedule"],
-    "answer": "Maintenance and monitoring of work/rest schedules and optimal sleep/circadian rhythm are crucial in-mission preventive measures to maintain crew health and performance[cite: 3].",
-    "recommend": "Maintain strict sleep hygiene, keep consistent sleep-wake cycles, and optimize cabin lighting.",
+    "keys": ["fever / chills", "infection", "immune function", "temperature", "immunoglobulin"],
+    "answer": "Optimization and periodic monitoring of immune function via multi-component countermeasures help prevent infectious diseases during missions[cite: 5].",
+    "recommend": "Monitor core body temperature, stay hydrated, and isolate if symptoms persist.",
+    "recommendTest": "Log thermal check and immune panel health assay (CSV).",
+    "source": "Index [3.4] — In-Mission Preventive Health Care"
+  },
+  {
+    "idx": [3.4, 3.5],
+    "keys": ["headache", "head ache", "migraine", "head hurts"],
+    "answer": "Physiological and neuro-vestibular shifts during spaceflight adaptation frequently cause localized symptoms like headaches[cite: 5].",
+    "recommend": "Hydrate, rest in a dim cabin, and re-check in 4 hours.",
+    "recommendTest": "Log a 24-hour hydration & sleep diary (CSV)...",
+    "source": "Index [3.4, 3.5] — In-Mission Medical Care"
+  },
+  {
+    "idx": [3.4],
+    "keys": ["tired / low energy", "fatigue", "energy depletion", "exhaustion"],
+    "answer": "Maintenance and monitoring of work/rest schedules and optimal sleep/circadian rhythms are critical to counter fatigue[cite: 5].",
+    "recommend": "Adjust work/rest balance and take scheduled rest periods.",
+    "recommendTest": "Log sleep duration and fatigue scale metrics (CSV).",
+    "source": "Index [3.4] — In-Mission Preventive Health Care"
+  },
+  {
+    "idx": [3.4, 3.5],
+    "keys": ["short of breath", "dyspnea", "respiratory", "breathing difficulty", "pressure-related"],
+    "answer": "Prevention of pressure-related illness or injury and monitoring of environmental parameters protect respiratory and cardiopulmonary function[cite: 5].",
+    "recommend": "Check cabin atmospheric telemetry and perform controlled breathing exercises.",
+    "recommendTest": "Execute real-time oxygen saturation and respiratory telemetry check.",
+    "source": "Index [3.4, 3.5] — In-Mission Medical Care"
+  },
+  {
+    "idx": [3.3, 3.4],
+    "keys": ["nutrition", "diet", "malnutrition", "caloric intake", "food intake"],
+    "answer": "Optimization of nutrition intake—including caloric density and macro/micronutrients—supports multiple physiological systems[cite: 5].",
+    "recommend": "Ensure diverse nutrient variety and review daily caloric intake targets.",
+    "recommendTest": "Run a daily nutrition and micronutrient balance log (JSON/CSV).",
+    "source": "Index [3.3, 3.4] — Preventive Health Care"
+  },
+  {
+    "idx": [3.4],
+    "keys": ["sleep", "insomnia", "circadian rhythm", "rest deficit"],
+    "answer": "Maintenance and monitoring of optimal sleep and circadian rhythm are essential for cognitive and physical performance[cite: 5].",
+    "recommend": "Maintain strict sleep hygiene and optimize cabin lighting controls.",
     "recommendTest": "Log a 24-hour sleep and circadian rhythm tracker.",
     "source": "Index [3.4] — In-Mission Preventive Health Care"
   },
   {
     "idx": [3.4],
-    "keys": ["aerobic fitness", "strength fitness", "exercise", "physical fitness", "muscle strength"],
-    "answer": "Maintenance and periodic monitoring of aerobic and strength physical fitness are required to support muscle strength, aerobic capacity, bone strength, and cardiovascular health[cite: 3].",
-    "recommend": "Perform scheduled resistance and aerobic training protocols daily.",
+    "keys": ["aerobic fitness", "strength", "physical fitness", "muscle loss", "deconditioning"],
+    "answer": "Maintenance and periodic monitoring of aerobic and strength physical fitness prevent muscle deconditioning and bone loss[cite: 5].",
+    "recommend": "Perform scheduled daily resistance and aerobic training protocols.",
     "recommendTest": "Complete weekly fitness capacity and strength output metrics assessment.",
     "source": "Index [3.4] — In-Mission Preventive Health Care"
   },
   {
-    "idx": [3.4],
-    "keys": ["vitamin d", "supplementation", "bone health", "immune function"],
-    "answer": "Vitamin D supplementation is implemented pre-mission and in-mission to support optimal bone and immune function[cite: 3].",
-    "recommend": "Review supplement schedules and maintain recommended daily intake levels.",
-    "recommendTest": "Periodic 25-hydroxyvitamin D blood serum lab assay.",
-    "source": "Index [3.3, 3.4] — Preventive Health Care"
-  },
-  {
     "idx": [3.4, 3.5],
-    "keys": ["behavioral health", "stress", "psychosocial", "isolation", "mental well-being"],
-    "answer": "Psychosocial countermeasures, private communications, and behavioral monitoring are used to address social isolation, team cohesion, and sensory deprivation during long missions[cite: 3].",
-    "recommend": "Utilize private family/psychological conferences and engage in scheduled crew relaxation activities.",
+    "keys": ["behavioral health", "stress", "isolation", "anxiety", "mood"],
+    "answer": "Optimization of psychosocial countermeasures addresses team cohesion, privacy, and social isolation during long missions[cite: 5].",
+    "recommend": "Utilize private family and psychological conferences for support.",
     "recommendTest": "Conduct periodic behavioral health stress and mood self-assessment logs.",
-    "source": "Index [3.4, 3.5] — In-Mission Health Care & Behavioral Support"
-  },
-  {
-    "idx": [3.4],
-    "keys": ["sans", "vision", "eyes", "ocular", "neuro-ocular syndrome"],
-    "answer": "Spaceflight Associated Neuro-Ocular Syndrome (SANS) requires periodic monitoring and prevention using designated technical countermeasures[cite: 3].",
-    "recommend": "Perform baseline optical coherence tomography and monitor visual acuity changes.",
-    "recommendTest": "Log optical coherence tomography (OCT) and refraction error tracking.",
-    "source": "Index [3.4] — In-Mission Preventive Health Care"
+    "source": "Index [3.4, 3.5] — In-Mission Medical Care & Behavioral Support"
   },
   {
     "idx": [3.5],
-    "keys": ["vital signs", "physiological signs", "monitoring", "heart rate", "vitals"],
-    "answer": "Assessing, recording, monitoring, and trending vital signs and additional physiological/behavioral health indicators are core components of in-mission medical care capabilities[cite: 3].",
+    "keys": ["vital signs", "vitals", "heart rate", "physiological signs", "telemetry"],
+    "answer": "Assessing, recording, monitoring, and trending vital signs and physiological parameters form core medical capabilities[cite: 5].",
     "recommend": "Initiate real-time telemetry tracking and re-evaluate baseline metrics.",
     "recommendTest": "Execute continuous multi-signal physiological telemetry stream check.",
-    "source": "Index [3.5] — In-Mission Medical Care"
-  },
-  {
-    "idx": [3.5],
-    "keys": ["dental", "teeth", "dental health", "toothache"],
-    "answer": "Periodic monitoring and treatment of dental health, along with preventive care, are provisioned to handle in-mission dental contingencies[cite: 3].",
-    "recommend": "Maintain regular oral hygiene routines and use onboard dental first-aid kits if minor irritation occurs.",
-    "recommendTest": "Perform a digital dental cavity and tissue assessment scan.",
-    "source": "Index [3.3, 3.4, 3.5] — Dental Care Provisions"
-  },
-  {
-    "idx": [3.4],
-    "keys": ["radiation", "total dose", "radiation exposure", "dose control"],
-    "answer": "Total radiation dose control and monitoring are actively enforced pre-mission and in-mission to protect cellular structures and DNA repair mechanisms[cite: 3].",
-    "recommend": "Limit extravehicular time during high-radiation solar events and track personal dosimeter readings.",
-    "recommendTest": "Analyze active personal radiation dosimeter cumulative data files.",
-    "source": "Index [3.3, 3.4] — Preventive Health Care"
-  },
-  {
-    "idx": [3.5],
-    "keys": ["medication", "pharmaceuticals", "drugs", "medical kits", "treatment plans"],
-    "answer": "In-mission medical kits contain carefully selected pharmaceuticals, equipment, and supplies optimized for ease-of-use, storage limits, and expiration tracking under spaceflight constraints[cite: 3].",
-    "recommend": "Verify medication packaging integrity, expiration dates, and consult clinical guidance before administration.",
-    "recommendTest": "Run automated medical inventory and stowage database scan.",
     "source": "Index [3.5] — In-Mission Medical Care"
   }
 ];
