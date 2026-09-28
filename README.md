@@ -690,6 +690,48 @@ SpaceMedi/
 
 ---
 
+
+## ⚙️ Quick Setup
+
+### 1. Clone & Enter the Repository
+
+```bash
+git clone https://github.com/Nahid-mahmud555/Nasa_Space_App_Challenge_2026.git
+cd Nasa_Space_App_Challenge_2026
+```
+
+### 2. Create & Activate Python Environment
+
+**Linux / macOS**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+**Windows**
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### 4. Run SpaceMedi
+
+```bash
+python python-file/spacemedi_evidence_engine.py
+```
+
+> **Note:** The `.venv` environment is local only and should not be committed to GitHub. Dependencies are managed through `requirements.txt`.
+
+
+
 # 🛡️ Safety Philosophy
 
 SpaceMedi is a **decision-support concept**, not a replacement for qualified medical professionals.
