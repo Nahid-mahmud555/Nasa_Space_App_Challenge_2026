@@ -1,4 +1,4 @@
-# 🚀 SpaceMedi — Round 2 Backend
+#  SpaceMedi — Round 2 Backend
 
 ### Personalized Offline Health Intelligence for Long-Duration Space Missions
 
@@ -10,7 +10,7 @@ This Round 2 backend focuses on building the **trusted knowledge, evidence retri
 
 ---
 
-## 🎯 Round 2 Objective
+##  Round 2 Objective
 
 The goal of this stage is to move SpaceMedi beyond a prototype interface toward a structured backend architecture that can:
 
@@ -25,7 +25,7 @@ The goal of this stage is to move SpaceMedi beyond a prototype interface toward 
 
 ---
 
-# 🧠 Core Principle
+#  Core Principle
 
 SpaceMedi follows one critical rule:
 
@@ -37,7 +37,7 @@ The system is designed to avoid unsupported medical responses rather than genera
 
 ---
 
-# 🏗️ Backend Architecture
+#  Backend Architecture
 
 ```text
                     VERIFIED SOURCES
