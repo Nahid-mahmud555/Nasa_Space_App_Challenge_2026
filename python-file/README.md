@@ -2,7 +2,7 @@
 
 ### Personalized Offline Health Intelligence for Long-Duration Space Missions
 
-> **When Earth is too far to answer, let the astronaut's health speak.** ihiho
+> **When Earth is too far to answer, let the astronaut's health speak.**
 
 SpaceMedi is an offline-first health intelligence and decision-support system designed for astronauts during long-duration space missions, where communication with Earth may be delayed, limited, or unavailable.
 
