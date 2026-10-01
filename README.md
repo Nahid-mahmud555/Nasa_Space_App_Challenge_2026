@@ -3,7 +3,7 @@
 ### Personalized Offline Health Intelligence for Long-Duration Space Missions
 
 <p align="center">
-  <strong>When Earth is too far to answer, let the astronaut's health speak.</strong> ggf
+  <strong>When Earth is too far to answer, let the astronaut's health speak.</strong> 
 </p>
 
 <p align="center">
