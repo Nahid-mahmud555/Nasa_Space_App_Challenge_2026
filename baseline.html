@@ -7,7 +7,319 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css">
+<style>
+  :root {
+    --bg: #F9F8F6;
+    --card-bg: #FFFFFF;
+    --text: #0F172A;
+    --border: #E2E8F0;
+    --green: #10B981;
+    --dark: #0F172A;
+    --accent: #3B82F6;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .ob-shell {
+    width: 100%;
+    max-width: 520px;
+    padding: 20px;
+  }
+  .ob-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    box-shadow: 0 4px 12px -2px rgba(0,0,0,0.05);
+    position: relative;
+  }
+  .ob-progress {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+  .ob-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #E2E8F0;
+    transition: all 0.3s ease;
+  }
+  .ob-dot.active {
+    background: var(--dark);
+    transform: scale(1.2);
+  }
+  .ob-dot.done {
+    background: var(--green);
+  }
+  .ob-mark {
+    width: 44px;
+    height: 44px;
+    background: var(--dark);
+    color: white;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    font-size: 16px;
+  }
+  .ob-mark.small {
+    width: 36px;
+    height: 36px;
+    background: #ECFDF5;
+    color: var(--green);
+    font-size: 18px;
+  }
+  .ob-title {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .ob-sub {
+    font-size: 13.5px;
+    color: #64748B;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+  .connect-opts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .connect-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px;
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+  }
+  .connect-btn:hover {
+    border-color: var(--dark);
+    background: #F1F5F9;
+  }
+  .cb-icon {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .cb-label {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .cb-sub {
+    font-size: 12px;
+    color: #64748B;
+  }
+  .ob-hint {
+    font-size: 11.5px;
+    color: #94A3B8;
+    text-align: center;
+  }
+  
+  /* STEP 2 ANIMATIONS */
+  .ob-connecting {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pulse-core {
+    width: 32px;
+    height: 32px;
+    background: var(--dark);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  .pulse-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--dark);
+    animation: pulse 2s infinite ease-out;
+    opacity: 0;
+  }
+  .pulse-ring.delay1 { animation-delay: 0.5s; }
+  .pulse-ring.delay2 { animation-delay: 1s; }
+  @keyframes pulse {
+    0% { transform: scale(0.3); opacity: 0.8; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+  .reading-list {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .reading-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: all 0.4s ease-out;
+  }
+  .reading-row.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .rr-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  .rr-label { flex: 1; color: #475569; }
+  .rr-value { font-weight: 700; font-family: monospace; font-size: 14px; }
+  .stream-status {
+    font-size: 12px;
+    color: var(--green);
+    font-weight: 600;
+    text-align: center;
+    min-height: 20px;
+  }
+
+  /* STEP 3 AM/PM */
+  .period-row {
+    display: grid;
+    grid-template-cols: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .period-opt {
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    background: #F8FAFC;
+  }
+  .period-opt:hover {
+    border-color: var(--dark);
+  }
+  .period-opt.active {
+    border-color: var(--dark);
+    background: var(--dark);
+    color: white;
+  }
+  .po-icon { font-size: 20px; margin-bottom: 4px; }
+  .po-label { font-weight: 600; font-size: 14px; }
+  .po-time { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+
+  .btn {
+    width: 100%;
+    background: var(--dark);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* STEP 4 SUCCESS */
+  .ob-success-mark {
+    width: 54px;
+    height: 54px;
+    background: #ECFDF5;
+    color: var(--green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 auto 16px auto;
+  }
+  .ob-redirect {
+    font-size: 12px;
+    color: #64748B;
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  /* PERMISSION OVERLAY MODAL */
+  .permission-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+  .permission-overlay.show {
+    display: flex;
+  }
+  .permission-box {
+    background: white;
+    border-radius: 14px;
+    padding: 24px;
+    width: 90%;
+    max-width: 380px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+  }
+  .pt { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+  .ps { font-size: 13px; color: #475569; line-height: 1.4; margin-bottom: 20px; }
+  .permission-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .permission-actions button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: white;
+    cursor: pointer;
+  }
+  .permission-actions button.allow {
+    background: var(--dark);
+    color: white;
+    border: none;
+  }
+</style>
 </head>
 <body>
 
@@ -96,7 +408,7 @@
         Your reading is now your personal baseline.
       </div>
       <div class="ob-redirect">
-        Opening your dashboard<span class="dots"><i></i><i></i><i></i></span>
+        Opening your dashboard…
       </div>
     </div>
 
@@ -115,30 +427,44 @@
   </div>
 </div>
 
-<script src="assets/app.js"></script>
 <script>
 /* ============================================================
-   LAYER 2 — Baseline sensor onboarding
-   Steps: 1 connect → 2 stream → 3 AM/PM → 4 saved → dashboard
+   AETHER-SYNC (AS) GLOBAL HELPER SERVICES
    ============================================================ */
+window.AS = {
+  currentCrewId: function() {
+    return localStorage.getItem('aethersync_active_crew') || 'CREW-01';
+  },
+  simulateReading: function() {
+    return {
+      restingHR: Math.floor(65 + Math.random() * 8),
+      spo2: (98 + Math.random() * 1.5).toFixed(1),
+      sleepHours: (7 + Math.random() * 1.5).toFixed(1)
+    };
+  },
+  saveBaseline: function(crewId, data) {
+    localStorage.setItem('aethersync_baseline_' + crewId, JSON.stringify(data));
+  },
+  saveSensorReading: function(crewId, reading) {
+    localStorage.setItem('aethersync_last_reading_' + crewId, JSON.stringify(reading));
+  }
+};
 
+/* ============================================================
+   LAYER 2 — Baseline Sensor Onboarding Stepper
+   ============================================================ */
 console.log('[AetherSync] Baseline page loaded');
 
-var crewId = AS.currentCrewId();
-if (!crewId) {
-  console.warn('[AetherSync] Not logged in → index.html');
-  window.location.href = 'index.html';
-} else {
-  document.getElementById('crewName').textContent = crewId;
-  console.log('[AetherSync] Crew:', crewId);
-}
+var crewId = window.AS.currentCrewId();
+var crewNameEl = document.getElementById('crewName');
+if (crewNameEl) crewNameEl.textContent = crewId;
 
 var pendingMethod = null;
 var overlay = document.getElementById('permOverlay');
 var reading = null;
 var period = null;
 
-/* ---------- Step navigation ---------- */
+/* ---------- Step Navigation ---------- */
 function showStep(n) {
   for (var i = 1; i <= 4; i++) {
     var el = document.getElementById('obStep' + i);
@@ -152,7 +478,7 @@ function showStep(n) {
   }
 }
 
-/* ---------- Ask permission ---------- */
+/* ---------- Permission Overlay Popup ---------- */
 function askPermission(method) {
   console.log('[AetherSync] askPermission:', method);
   pendingMethod = method;
@@ -177,7 +503,7 @@ var btnUsb = document.getElementById('btnUsb');
 if (btnBt) btnBt.addEventListener('click', function () { askPermission('bluetooth'); });
 if (btnUsb) btnUsb.addEventListener('click', function () { askPermission('usb'); });
 
-/* ---------- Block ---------- */
+/* ---------- Block Permission ---------- */
 var permBlock = document.getElementById('permBlock');
 if (permBlock) {
   permBlock.addEventListener('click', function () {
@@ -187,7 +513,7 @@ if (permBlock) {
   });
 }
 
-/* ---------- Allow → stream readings ---------- */
+/* ---------- Allow → Stream Sensor Readings ---------- */
 var permAllow = document.getElementById('permAllow');
 if (permAllow) {
   permAllow.addEventListener('click', function () {
@@ -217,7 +543,7 @@ if (permAllow) {
 
     /* Phase 2: stream rows */
     setTimeout(function () {
-      reading = AS.simulateReading();
+      reading = window.AS.simulateReading();
       console.log('[AetherSync] Simulated reading:', reading);
 
       var rows = [
@@ -249,7 +575,7 @@ if (permAllow) {
   });
 }
 
-/* ---------- Period selection ---------- */
+/* ---------- AM/PM Period Selection ---------- */
 function selectPeriod(p) {
   period = p;
   var amEl = document.getElementById('periodAM');
@@ -265,7 +591,7 @@ var periodPM = document.getElementById('periodPM');
 if (periodAM) periodAM.addEventListener('click', function () { selectPeriod('AM'); });
 if (periodPM) periodPM.addEventListener('click', function () { selectPeriod('PM'); });
 
-/* ---------- Save baseline ---------- */
+/* ---------- Save Baseline and Redirect ---------- */
 var saveBtn = document.getElementById('saveBaselineBtn');
 if (saveBtn) {
   saveBtn.addEventListener('click', function () {
@@ -285,8 +611,8 @@ if (saveBtn) {
       createdAt: new Date().toISOString()
     };
 
-    AS.saveBaseline(crewId, data);
-    AS.saveSensorReading(crewId, reading);
+    window.AS.saveBaseline(crewId, data);
+    window.AS.saveSensorReading(crewId, reading);
 
     var finalMsg = document.getElementById('obFinalMsg');
     if (finalMsg) {
