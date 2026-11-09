@@ -19,6 +19,7 @@
     --yellow: #F59E0B;
     --red: #EF4444;
     --dark: #0F172A;
+    --cyan: #38BDF8;
   }
   body {
     background-color: var(--bg);
@@ -43,12 +44,18 @@
   .panel-title { font-size: 13px; font-weight: 700; text-transform: uppercase; font-family: monospace; color: var(--ink-dim); }
   .panel-note { font-size: 11px; font-family: monospace; color: var(--ink-faint); }
 
-  .chat-box { background: #F8FAFC; border: 1px solid var(--border); border-radius: 10px; height: 320px; overflow-y: auto; padding: 16px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px; }
-  .msg { max-width: 80%; padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.5; }
-  .msg.bot { background: white; border: 1px solid var(--border); align-self: flex-start; color: var(--ink); }
-  .msg.user { background: var(--dark); color: white; align-self: flex-end; }
-  .msg .src { display: block; font-size: 10px; font-family: monospace; color: var(--ink-faint); margin-top: 6px; border-top: 1px solid #F1F5F9; padding-top: 4px; }
+  .chat-box { background: #F8FAFC; border: 1px solid var(--border); border-radius: 10px; height: 360px; overflow-y: auto; padding: 16px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { max-width: 82%; padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.5; position: relative; }
+  .msg.bot { background: white; border: 1px solid var(--border); align-self: flex-start; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+  .msg.user { background: var(--dark); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+  
+  /* Sourced Citation Card UI */
+  .src-card { display: flex; flex-direction: column; gap: 2px; font-size: 11px; font-family: monospace; color: var(--ink-dim); background: #F1F5F9; border-left: 3px solid var(--cyan); padding: 6px 10px; border-radius: 4px; margin-top: 10px; }
+  .src-card .src-title { font-weight: bold; color: var(--ink); display: flex; align-items: center; gap: 4px; }
+  .src-badge { background: #E0F2FE; color: #0369A1; font-size: 9px; padding: 1px 5px; border-radius: 4px; font-weight: 700; }
+  
   .msg.notfound { border-color: #F87171; background: #FEF2F2; }
+  .msg.notfound .src-card { border-left-color: var(--red); background: #FEE2E2; }
 
   .chat-input-row { display: flex; gap: 10px; }
   input[type="text"] { flex: 1; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; }
@@ -80,7 +87,7 @@
 </style>
 </head>
 <body>
-<div class="wrap" style="max-width:960px;">
+<div class="wrap">
   <nav class="top">
     <a class="brand" href="chatbot.html">
       <div class="brand-mark">AS</div>
@@ -135,7 +142,7 @@
   </div>
 
   <!-- ============ 15-DAY TRENDS ============ -->
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
+  <div class="grid">
     <div class="panel">
       <div class="panel-head">
         <div class="panel-title">🔥 Most Asked — 15-day</div>
@@ -166,7 +173,7 @@
 
 <script>
 /* ============================================================
-   AETHER-SYNC AS GLOBAL KNOWLEDGE BASE HELPER
+   AETHER-SYNC (AS) GLOBAL KNOWLEDGE BASE HELPER WITH SOURCES
    ============================================================ */
 window.AS = window.AS || {
   findAnswer: function(query) {
@@ -175,25 +182,29 @@ window.AS = window.AS || {
       return {
         answer: 'Elevated core temperature protocol (NASA-STD-3001 Vol 1): Monitor hydration, take oral temperature every 4 hours, and isolate if viral symptoms persist.',
         idx: [43, 89],
-        source: 'NASA Space Medicine Clinical Manual v4.2'
+        source: 'NASA Space Medicine Clinical Manual v4.2 · Sec 3.1',
+        type: 'VERIFIED GROUND PROTOCOL'
       };
     } else if (q.includes('headache') || q.includes('blur') || q.includes('sans') || q.includes('pressure')) {
       return {
         answer: 'SANS & Intracranial Pressure Protocol: Check optic fundoscopy, evaluate daily fluid intake, and apply Lower Body Negative Pressure (LBNP) if prescribed.',
         idx: [12, 5],
-        source: 'NASA SANS Clinical Protocol & Flight Surgeon Manual'
+        source: 'NASA SANS Clinical Protocol & Flight Surgeon Manual · Doc #892',
+        type: 'FLIGHT MEDICAL STANDARD'
       };
     } else if (q.includes('tired') || q.includes('fatigue') || q.includes('sleep') || q.includes('insomnia')) {
       return {
         answer: 'Circadian Alignment Protocol: Ensure light spectrum exposure matches mission schedule (blue-enriched AM, amber PM). Review sleep logs.',
         idx: [28, 14],
-        source: 'NASA Behavioral Health & Performance Standard'
+        source: 'NASA Behavioral Health & Performance Standard · Circadian Module',
+        type: 'BEHAVIORAL HEALTH BASELINE'
       };
     } else if (q.includes('radiation') || q.includes('mgY') || q.includes('dosimeter')) {
       return {
         answer: 'Radiation Safety Protocol: Keep exposure below ALARA limits. Review personal dosimeter metrics and limit extravehicular activity during solar proton events.',
         idx: [77, 33],
-        source: 'NASA Spacecraft Radiation Protection Guide'
+        source: 'NASA Spacecraft Radiation Protection Guide · RAD-STD-2024',
+        type: 'ENVIRONMENTAL SAFETY'
       };
     }
     return null;
@@ -236,32 +247,38 @@ window.AS = window.AS || {
 };
 
 /* ============================================================
-   LAYER 5 — Offline Health Assistant Logic
+   LAYER 5 — Offline Health Assistant UI Logic
    ============================================================ */
-var chatBox  = document.getElementById('chatBox');
+var chatBox   = document.getElementById('chatBox');
 var chatInput = document.getElementById('chatInput');
-var logBox   = document.getElementById('logBox');
+var logBox    = document.getElementById('logBox');
 
 var state = { qCounter: 200, firstLog: true };
 
-function appendMsg(text, who, srcText, notFound) {
+function appendMsg(text, who, srcText, srcType, notFound) {
   var msg = document.createElement('div');
   msg.className = 'msg ' + who + (notFound ? ' notfound' : '');
-  msg.textContent = text;
+  
+  var textDiv = document.createElement('div');
+  textDiv.textContent = text;
+  msg.appendChild(textDiv);
+
   if (srcText) {
-    var src = document.createElement('span');
-    src.className = 'src';
-    src.textContent = srcText;
-    msg.appendChild(src);
+    var srcCard = document.createElement('div');
+    srcCard.className = 'src-card';
+    srcCard.innerHTML = 
+      '<div class="src-title">📖 Source Citation <span class="src-badge">' + (srcType || 'GROUND KB') + '</span></div>' +
+      '<div>' + srcText + '</div>';
+    msg.appendChild(srcCard);
   }
+
   chatBox.appendChild(msg);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function addLogLine(html, cls) {
+function addLogLine(html) {
   if (state.firstLog) { logBox.innerHTML = ''; state.firstLog = false; }
   var div = document.createElement('div');
-  if (cls) div.className = cls;
   div.innerHTML = html;
   logBox.insertBefore(div, logBox.firstChild);
 }
@@ -285,6 +302,7 @@ function handleAsk() {
         hit.answer + ' (This is decision-support, not a diagnosis — please involve ground medical support for anything persistent or severe.)',
         'bot',
         hit.source,
+        hit.type,
         false
       );
       addLogLine('<span class="qline">[' + qid + ', [' + hit.idx.join(',') + '], ANSWERED]</span>');
@@ -296,13 +314,14 @@ function handleAsk() {
         "I don't have a sufficiently supported answer for this in the onboard knowledge base. I'm recording this question so ground researchers can review the closest related topics and close this gap for future missions.",
         'bot',
         'No matching verified index · logged as NOT_FOUND',
+        'GROUND QUEUE',
         true
       );
       addLogLine('<span class="nf">[' + qid + ', [—], NOT_FOUND]</span>');
     }
 
     renderTrends();
-  }, 350);
+  }, 300);
 }
 
 document.getElementById('chatSend').addEventListener('click', handleAsk);
