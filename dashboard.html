@@ -19,6 +19,7 @@
     --yellow: #F59E0B;
     --red: #EF4444;
     --dark: #0F172A;
+    --cyan: #38BDF8;
   }
   body {
     background-color: var(--bg);
@@ -53,6 +54,21 @@
   .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px; }
   .panel-title { font-size: 13px; font-weight: 700; text-transform: uppercase; font-family: monospace; color: var(--ink-dim); }
   .panel-note { font-size: 11px; font-family: monospace; color: var(--ink-faint); }
+
+  /* 3D HOLOGRAPHIC BODY STYLES */
+  .hologram-box { background: #0F172A; border-radius: 12px; padding: 20px; color: white; position: relative; overflow: hidden; border: 1px solid #1E293B; margin-bottom: 16px; }
+  .holo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 11px; font-family: monospace; color: var(--cyan); border-bottom: 1px solid #1E293B; padding-bottom: 8px; }
+  .holo-body-layout { display: flex; gap: 20px; align-items: center; justify-content: center; }
+  @media(max-width: 500px) { .holo-body-layout { flex-direction: column; } }
+  
+  .organ-selector { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 180px; }
+  .organ-btn { background: #1E293B; border: 1px solid #334155; color: #94A3B8; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-family: monospace; text-align: left; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+  .organ-btn:hover { border-color: var(--cyan); color: white; }
+  .organ-btn.active { background: #0284C7; color: white; border-color: var(--cyan); font-weight: bold; }
+  .organ-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .organ-status-dot.warn { background: var(--yellow); }
+
+  .organ-details { background: #1E293B; border: 1px solid #334155; padding: 12px; border-radius: 8px; font-size: 12px; margin-top: 12px; color: #CBD5E1; line-height: 1.5; font-family: monospace; }
 
   .connect-opts { display: flex; gap: 10px; margin-bottom: 12px; }
   .connect-btn { display: flex; flex-direction: column; align-items: flex-start; padding: 12px 14px; background: #F8FAFC; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.2s; }
@@ -177,6 +193,66 @@
 
   <div class="grid">
     <div>
+      <!-- 3D HOLOGRAPHIC BODY VISUALIZER PANEL -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Interactive 3D Holographic Body Visualizer</div>
+          <div class="panel-note">NASA-STD-3001 Model</div>
+        </div>
+        
+        <div class="hologram-box">
+          <div class="holo-header">
+            <span>BIOMETRIC MESH: ACTIVE</span>
+            <span style="color: var(--green);">● SYSTEM NOMINAL</span>
+          </div>
+
+          <div class="holo-body-layout">
+            <!-- SVG Full Body Model with Interactive Glow Nodes -->
+            <div style="position: relative; text-align: center;">
+              <svg viewBox="0 0 180 340" style="width: 130px; height: 240px; filter: drop-shadow(0 0 8px rgba(56,189,248,0.3));">
+                <!-- Outer Body Wireframe -->
+                <path d="M90 15 C105 15 115 28 115 42 C115 56 105 68 90 68 C75 68 65 56 65 42 C65 28 75 15 90 15 Z" fill="none" stroke="#38BDF8" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.7"/>
+                <path d="M55 78 L125 78 L138 140 L125 240 L110 310 L98 310 L98 210 L82 210 L82 310 L70 310 L55 240 L42 140 Z" fill="none" stroke="#38BDF8" stroke-width="1.5" opacity="0.5"/>
+                
+                <!-- Interactive Body Hotspots -->
+                <circle id="spot-brain" cx="90" cy="42" r="9" fill="#38BDF8" class="hotspot" style="cursor: pointer;" onclick="selectAnatomy('brain')"/>
+                <circle cx="90" cy="42" r="14" fill="none" stroke="#38BDF8" stroke-width="1" opacity="0.6"/>
+
+                <circle id="spot-cardio" cx="90" cy="105" r="8" fill="#10B981" style="cursor: pointer;" onclick="selectAnatomy('cardio')"/>
+                <line x1="90" y1="78" x2="90" y2="190" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" style="cursor: pointer;" onclick="selectAnatomy('spine')"/>
+                <circle id="spot-immune" cx="90" cy="165" r="8" fill="#10B981" style="cursor: pointer;" onclick="selectAnatomy('immune')"/>
+              </svg>
+              <div style="font-size: 10px; font-family: monospace; color: var(--ink-faint); margin-top: 4px;">Click nodes to inspect</div>
+            </div>
+
+            <!-- Organ Selector Menu -->
+            <div class="organ-selector">
+              <button class="organ-btn active" onclick="selectAnatomy('brain')">
+                <span>1. CNS / SANS</span>
+                <span class="organ-status-dot"></span>
+              </button>
+              <button class="organ-btn" onclick="selectAnatomy('cardio')">
+                <span>2. Cardiovascular</span>
+                <span class="organ-status-dot"></span>
+              </button>
+              <button class="organ-btn" onclick="selectAnatomy('spine')">
+                <span>3. Spine / Bones</span>
+                <span class="organ-status-dot warn"></span>
+              </button>
+              <button class="organ-btn" onclick="selectAnatomy('immune')">
+                <span>4. Immune System</span>
+                <span class="organ-status-dot"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Details Box -->
+          <div class="organ-details" id="anatomyDesc">
+            <b>CNS / Neuro-Ocular (SANS-01):</b> Intracranial pressure nominal. No fluid shift anomalies detected in optic disc.
+          </div>
+        </div>
+      </div>
+
       <!-- SENSOR CONNECT PANEL -->
       <div class="panel" id="sensorConnectPanel">
         <div class="panel-head">
@@ -477,6 +553,26 @@ window.AS = {
     localStorage.setItem('aethersync_upload_' + id, JSON.stringify(fileMeta));
   }
 };
+
+/* 3D Model Anatomy Switcher Function */
+function selectAnatomy(part) {
+  var btns = document.querySelectorAll('.organ-btn');
+  btns.forEach(function(b) { b.classList.remove('active'); });
+  if (event && event.currentTarget) {
+    event.currentTarget.classList.add('active');
+  }
+
+  var desc = document.getElementById('anatomyDesc');
+  if (part === 'brain') {
+    desc.innerHTML = '<b>CNS / Neuro-Ocular (SANS-01):</b> Intracranial pressure nominal. No optic disc edema or fluid shift anomalies detected.';
+  } else if (part === 'cardio') {
+    desc.innerHTML = '<b>Cardiovascular Adaptation (CV-02):</b> Upper torso fluid shift stabilized. Resting heart rate and cardiac output within expected limits.';
+  } else if (part === 'spine') {
+    desc.innerHTML = '<b>Spine & Skeletal (MSK-03):</b> Spinal column elongation +1.8 cm observed. Vertebral load baseline normal; countermeasure exercise advised.';
+  } else if (part === 'immune') {
+    desc.innerHTML = '<b>Immune & Integumentary (IMM-04):</b> Mild erythema check nominal. Latent viral reactivation risk low under current ECLSS parameters.';
+  }
+}
 
 /* ============================================================
    DASHBOARD BOOTSTRAP LOGIC
