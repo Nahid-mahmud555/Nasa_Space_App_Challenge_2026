@@ -375,7 +375,7 @@
       </div>
 
       <!-- MIND GAMES -->
-      <div class="panel" id="mindGamesPanel" style="display:none;">
+      <div class="panel" id="mindGamesPanel">
         <div class="panel-head">
           <div class="panel-title">🧠 Mind Games — 5-Day Assessment</div>
           <div class="panel-note">voice · puzzle · find-the-number</div>
@@ -406,7 +406,7 @@
           <div class="numgame-grid" id="numgameGrid"></div>
           <div class="numgame-status">
             <span class="ng-timer">⏱ 0.0s</span>
-            <span class="ng-found">— not found yet</span>
+            <span class="ng-found" id="ngFoundStatus">— not found yet</span>
           </div>
           <button class="link-btn" id="restartNumGame" style="margin-top:8px;">↻ Play again</button>
         </div>
@@ -510,7 +510,7 @@ window.AS = {
   },
   buildCompactIndex: function(id, sensor, symptomText, match, status) {
     var day = 142;
-    var idx = match ? [43, 89] : [12, 05];
+    var idx = match ? [43, 89] : [12, 5];
     var line = '[' + day + ', ' + sensor.restingHR + ', ' + sensor.spo2 + '%, ' + (match ? 'WATCH' : 'NORMAL') + ']';
     return {
       day: day,
@@ -558,8 +558,8 @@ window.AS = {
 function selectAnatomy(part) {
   var btns = document.querySelectorAll('.organ-btn');
   btns.forEach(function(b) { b.classList.remove('active'); });
-  if (event && event.currentTarget) {
-    event.currentTarget.classList.add('active');
+  if (window.event && window.event.currentTarget) {
+    window.event.currentTarget.classList.add('active');
   }
 
   var desc = document.getElementById('anatomyDesc');
@@ -901,15 +901,41 @@ function boot() {
     });
   }
 
-  if (window.AS.shouldRunMindGames(crewId)) {
-    var mgPanel = document.getElementById('mindGamesPanel');
-    if (mgPanel) mgPanel.style.display = 'block';
-    try {
-      initMindGames();
-    } catch (err) {
-      console.error('[AetherSync] Mind games init failed:', err);
-    }
+  /* PDF DOWNLOAD LOGIC */
+  var downloadReportBtn = document.getElementById('downloadReportBtn');
+  if (downloadReportBtn) {
+    downloadReportBtn.addEventListener('click', function () {
+      var records = window.AS.getRecords(crewId);
+      var printWin = window.open('', '_blank');
+      var reportHtml = '<html><head><title>AetherSync Health Report - ' + crewId + '</title>' +
+        '<style>body{font-family:sans-serif;padding:30px;color:#0F172A;} h1{border-bottom:2px solid #0F172A;padding-bottom:10px;} .metric{margin-bottom:15px;padding:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;}</style>' +
+        '</head><body>' +
+        '<h1>AetherSync Health & Biometric Summary Report</h1>' +
+        '<p><b>Crew Member:</b> ' + crewId + '</p>' +
+        '<p><b>Report Date:</b> ' + new Date().toLocaleString() + '</p>' +
+        '<hr>' +
+        '<h3>Latest Vitals Record</h3>' +
+        '<div class="metric">Heart Rate: ' + (todaySensor ? todaySensor.restingHR : '72') + ' bpm</div>' +
+        '<div class="metric">SpO₂: ' + (todaySensor ? todaySensor.spo2 : '98.5') + '%</div>' +
+        '<div class="metric">Sleep Duration: ' + (todaySensor ? todaySensor.sleepHours : '7.8') + ' hrs</div>' +
+        '<h3>Check-in History (' + records.length + ' entries)</h3>';
+
+      for (var r = 0; r < records.length; r++) {
+        reportHtml += '<div class="metric"><b>Day ' + records[r].day + ':</b> ' + (records[r].symptom || 'Check-in') + ' — Status: ' + records[r].status + '</div>';
+      }
+
+      reportHtml += '</body></html>';
+      printWin.document.write(reportHtml);
+      printWin.document.close();
+      printWin.focus();
+      setTimeout(function () {
+        printWin.print();
+      }, 500);
+    });
   }
+
+  /* MIND GAMES INIT & RESTART HANDLERS */
+  initMindGames();
 
   function initMindGames() {
     var puzzles = window.AS.getPuzzles();
@@ -929,6 +955,9 @@ function boot() {
             var all = optsBox.querySelectorAll('.puzzle-opt');
             for (var j = 0; j < all.length; j++) all[j].classList.remove('selected');
             el.classList.add('selected');
+            if (idx === puzzle.ans) {
+              window.AS.saveGameScore(crewId, 'puzzleScore', 100);
+            }
           });
           optsBox.appendChild(el);
         })(i);
@@ -939,7 +968,7 @@ function boot() {
     var recordStatus = document.getElementById('recordStatus');
     if (recordBtn && recordStatus) {
       var recording = false;
-      recordBtn.addEventListener('click', function () {
+      recordBtn.onclick = function () {
         if (!recording) {
           recording = true;
           recordBtn.textContent = '⏹ Stop Recording';
@@ -953,31 +982,31 @@ function boot() {
               recordBtn.textContent = '🎤 Re-record';
               window.AS.saveGameScore(crewId, 'voiceClarity', 87);
             }
-          }, 4000);
+          }, 3000);
         } else {
           recording = false;
           recordBtn.textContent = '🎤 Start Recording';
           recordStatus.textContent = 'stopped';
         }
-      });
+      };
     }
 
     initNumberGame();
 
     var restartBtn = document.getElementById('restartNumGame');
     if (restartBtn) {
-      restartBtn.addEventListener('click', function (e) {
+      restartBtn.onclick = function (e) {
         e.preventDefault();
         initNumberGame();
-      });
+      };
     }
   }
 
   function initNumberGame() {
     var grid = document.getElementById('numgameGrid');
     var targetEl = document.getElementById('numgameTarget');
-    var status = document.getElementById('numgameStatus');
-    if (!grid || !targetEl || !status) return;
+    var statusFound = document.getElementById('ngFoundStatus');
+    if (!grid || !targetEl) return;
 
     if (numGameState.timerId) clearInterval(numGameState.timerId);
     numGameState.finished = false;
@@ -999,6 +1028,10 @@ function boot() {
 
     targetEl.textContent = 'Find: ' + target;
     grid.innerHTML = '';
+    if (statusFound) {
+      statusFound.textContent = '— not found yet';
+      statusFound.style.color = 'var(--ink-dim)';
+    }
 
     for (var j = 0; j < cells.length; j++) {
       (function (num) {
@@ -1012,7 +1045,7 @@ function boot() {
             numGameState.started = Date.now();
             numGameState.timerId = setInterval(function () {
               numGameState.elapsed = (Date.now() - numGameState.started) / 1000;
-              var t = status.querySelector('.ng-timer');
+              var t = document.querySelector('.ng-timer');
               if (t) t.textContent = '⏱ ' + numGameState.elapsed.toFixed(1) + 's';
             }, 100);
           }
@@ -1023,10 +1056,9 @@ function boot() {
             numGameState.elapsed = (Date.now() - numGameState.started) / 1000;
 
             el.classList.add('found');
-            var f = status.querySelector('.ng-found');
-            if (f) {
-              f.textContent = '✓ Found in ' + numGameState.elapsed.toFixed(2) + 's';
-              f.style.color = 'var(--green)';
+            if (statusFound) {
+              statusFound.textContent = '✓ Found in ' + numGameState.elapsed.toFixed(2) + 's';
+              statusFound.style.color = 'var(--green)';
             }
             var speedScore = Math.max(20, 100 - numGameState.elapsed * 8);
             window.AS.saveGameScore(crewId, 'numberScan', Math.round(speedScore));
