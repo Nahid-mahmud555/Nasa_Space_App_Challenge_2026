@@ -7,7 +7,173 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css">
+<style>
+  :root {
+    --bg: #F9F8F6;
+    --card-bg: #FFFFFF;
+    --text: #0F172A;
+    --border: #E2E8F0;
+    --green: #10B981;
+    --red: #EF4444;
+    --dark: #0F172A;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .auth-shell {
+    width: 100%;
+    max-width: 440px;
+    padding: 20px;
+  }
+  .auth-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  }
+  .auth-mark {
+    width: 48px;
+    height: 48px;
+    background: var(--dark);
+    color: white;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    font-size: 18px;
+  }
+  .auth-title {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .auth-sub {
+    font-size: 13px;
+    color: #64748B;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+  .field {
+    margin-bottom: 16px;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: #475569;
+  }
+  .field input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus {
+    border-color: var(--dark);
+  }
+  .btn {
+    width: 100%;
+    background: var(--dark);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+    display: block;
+    text-decoration: none;
+    box-sizing: border-box;
+    margin-top: 16px;
+    transition: opacity 0.2s;
+  }
+  .btn:hover {
+    opacity: 0.9;
+  }
+  .btn-secondary {
+    background: #F1F5F9;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .auth-divider {
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    line-height: 0.1em;
+    margin: 24px 0;
+  }
+  .auth-divider span {
+    background: var(--card-bg);
+    padding: 0 10px;
+    color: #94A3B8;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  .error {
+    font-size: 12px;
+    margin-top: 8px;
+    font-weight: 500;
+  }
+  .auth-hints {
+    margin-top: 24px;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+  .auth-hint-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: #475569;
+  }
+  .ah-icon {
+    width: 20px;
+    height: 20px;
+    background: #F1F5F9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+    color: #334155;
+  }
+  .auth-footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 11px;
+    color: #94A3B8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .auth-footer-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+  }
+</style>
 </head>
 <body>
 
@@ -52,7 +218,7 @@
     <div class="auth-divider"><span>or</span></div>
 
     <!-- Guest access -->
-    <a href="chatbot.html" class="btn btn-secondary btn-block">
+    <a href="chatbot.html" class="btn btn-secondary">
       Continue as Guest → Offline Health Assistant
     </a>
 
@@ -90,16 +256,25 @@
   </div>
 </div>
 
-<script src="assets/app.js"></script>
 <script>
   /* ============================================================
-     LAYER 1 — Login
-     Steps:
-       1. Crew ID + passcode → AS.login()
-       2. If baseline exists  → dashboard.html
-       3. If no baseline yet  → baseline.html   (Layer 2)
+     AETHER-SYNC (AS) CORE HELPER UTILITY
      ============================================================ */
+  window.AS = {
+    login: function(id, pass) {
+      if (!id || !pass) return false;
+      localStorage.setItem('aethersync_active_crew', id);
+      return true;
+    },
+    hasBaseline: function(id) {
+      // Check if baseline already exists in localStorage for this crew ID
+      return localStorage.getItem('aethersync_baseline_' + id) !== null;
+    }
+  };
 
+  /* ============================================================
+     LAYER 1 — Login Logic
+     ============================================================ */
   document.getElementById('loginForm').addEventListener('submit', function (e) {
     e.preventDefault();
 
@@ -118,18 +293,14 @@
       return;
     }
 
-    if (AS.login(id, pass)) {
+    if (window.AS.login(id, pass)) {
       err.style.color = 'var(--green)';
       err.textContent = 'Authenticated. Loading console…';
 
-      /* Small delay so the success message is visible */
       setTimeout(function () {
-        /* Returning crew → straight to dashboard */
-        if (AS.hasBaseline(id)) {
+        if (window.AS.hasBaseline(id)) {
           window.location.href = 'dashboard.html';
-        }
-        /* First-time crew → Layer 2 sensor onboarding */
-        else {
+        } else {
           window.location.href = 'baseline.html';
         }
       }, 450);
