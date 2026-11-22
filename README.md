@@ -1,4 +1,4 @@
-# 🚀 SpaceMedi
+#  SpaceMedi
 
 ### Personalized Offline Health Intelligence for Long-Duration Space Missions 
 
